@@ -34,3 +34,19 @@ And CR your way through warnings and stuff... Sorry.
 
 
 More will come later, I guess.
+
+
+# About margins
+
+My margins are not as correct as they could be, apparently, it would have been more conventional (for my "École Doctorale" at least) to use:
+
+```
+\geometry{
+    top=20mm,
+    bottom=30mm,
+    left=25mm,
+    right=25mm,
+    head=15mm,
+    foot=20mm
+}
+```
