@@ -1,0 +1,109 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+    
+Une fois l'ensemble des affixes candidats généré, il faut sélectionner les meilleurs affixes pour la tâche d'appliquation. Nous pouvons déjà appliquer quelques heuristiques afin de réduire le nombre d'affixes générés, comme ne pas générer ceux d'une taille insuffisante pour limiter le bruit. Des seuils de fréquence ou d'occurrences peuvent également servir pour la pertinence d'un candidat. Cependant, ces affixes étant faits pour être utilisés dans des contextes où un corpus est disponible, il paraît plus pertinent de leur donner un score de précision ou de couverture. On peut apparenter ce choix de métrique aux listes blanches et noires de \citet{lowe2014leadmine} qui ``ajustent'' la reconnaissance d'un dictionnaire sur le corpus d'apprentissage. Pour ce calcul, les flags BIO ne sont pas pris en compte. La précision d'un trait se définit alors comme la proportion de tokens reconnus dans la bonne classe par rapport au nombre de tokens reconnus, et la couverture comme la proportion de tokens reconnus parmi l'ensemble des tokens d'une classe donnée. L'inconvénient de l'utilisation de ces mesures est que, comme elles sont utilisées sur le corpus d'apprentissage, elles ne permettent pas de garantir une bonne qualité sur les entités inconnues.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\multirow{2}{*}{entité} & \multicolumn{4}{c|}{nombre de traits} \\
+                        & préfixes+suffixes & base     & couv >= 0,1\% & prc >= 25\% \\
+\hline
+TRIVIAL                 & \multirow{7}{*}{99863} & 4180    & 2694           & 1632 \\
+SYSTEMATIC              &                        & 9695    & 4161           & 7366 \\
+FORMULA                 &                        & 1039    & 732            & 659  \\
+FAMILY                  &                        & 3439    & 2319           & 1398 \\
+IDENTIFIER              &                        & 117     & 117            & 35   \\
+MULTIPLE                &                        & 795     & 795            & 49   \\
+NO\_CLASS               &                        & 20      & 20             & 1    \\
+\hline
+\end{tabular}
+\caption{Le nombre d'affixes de tokens en fonction de la sélection effectuée.}
+\label{tab:affixe-selection}
+\end{table}
+
+Sur chaque token, un nombre important de traits (infixes) peut être reconnu et il n'est pas possible de tous les ajouter en gardant un coût raisonnable. Il devient alors nécessaire de trier les traits de façon à augmenter leur diversité, les trier simplement à l'aide des scores risque de faire remonter des traits similaires (qui seraient des sous-chaînes d'autres traits). Cette question de diversité des traits peut se voir comme une variante du problème de couverture par ensembles, où un ensemble global doit être recouvert en un minimum de sous-ensembles connus à l'avance : un token serait transformé en l'ensemble de ses indices et un affixe serait la partition des indices qu'il recouvre (un même affixe pouvant apparaître à plusieurs endroits dans un même token). La reformulation de ce problème en problème de couverture par ensembles est donnée dans le tableau\ \ref{tab:substrings-as-covering}. Il existe ici deux différences avec le problème de couverture d'ensembles : la première est qu'il n'est nullement garanti ici de pouvoir couvrir l'ensemble global, la seconde est que deux sous-ensembles différents portent un sens différent. En effet, certains affixes proches ne représentent pas la même chose : methyl et ethyl par exemple ne représentent pas le même radical chimique. La couverture maximale n'est donc pas en soi souhaitable ici, rendant l'usage de l'heuristique de la sélection du sous-ensemble le plus couvrant \citep{chvatal1979greedy} sous-optimale pour notre problème. Si l'on utilisait l'heuristique de \citet{chvatal1979greedy} sur le cas présenté dans le tableau\ \ref{tab:substrings-as-covering}, le premier choix serait "ethyl", ce qui ferait de "methyl" le sous-ensemble le moins couvrant puisqu'il ne recouvrirait alors plus qu'un seul nouvel élément.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\multicolumn{2}{|c|}{ensembles}                      & indices\\
+\hline
+ensemble à couvrir                  & sous-ensembles & \{d$_{1}$,i$_{2}$,m$_{3}$,e$_{4}$,...,l$_{18}$\} \\
+\hline
+\multirow{4}{*}{dimethylaminoethyl} & methyl         & \{m$_{3}$,e$_{4}$,t$_{5}$,h$_{6}$,y$_{7}$,l$_{8}$\} \\
+                                    & ethyl          & \{e$_{4}$,t$_{5}$,h$_{6}$,y$_{7}$,l$_{8}$, e$_{ 14}$,t$_{15}$,h$_{16}$,y$_{17}$,l$_{18}$\} \\
+                                    & amino          & \{a$_{9}$,m$_{10}$,i$_{11}$,n$_{12}$,o$_{13}$\} \\
+                                    & di             & \{d$_{1}$,i$_{2}$\} \\
+\hline
+\end{tabular}
+\caption{reformulation du problème de la diversité des traits en tant que problème de recouvrement par ensembles. Selon l'heuristique de \citet{chvatal1979greedy}, l'ordre des sous-ensembles à sélectionner serait : ethyl, amino, di puis methyl. Un meilleur ordre serait : methyl, ethyl, amino puis di.}
+\label{tab:substrings-as-covering}
+\end{table}
+
+Les sous-chaînes plus longues, comme nous venons de le voir, représentent des éléments plus précis qu'il est préférable de favoriser, mais garantir la diversité des traits observés est tout aussi important pour améliorer la reconnaissance. Un moyen plus simple de s'assurer en général d'une bonne diversité des traits utilisés consiste à les hiérarchiser. Il est possible de construire un trellis où chaque arc vérifie une relation $R$ définie comme "$x$ est plus général que $y$". $R$ doit être transitive et asymétrique. Dans le cadre des infixes, $R$ se définit comme ``$x$ est une sous-chaîne stricte de $y$''. La construction du trellis se fait de la façon suivante : si un n\oe ud $x$ n'est en relation avec aucun n\oe ud $y$ dans le trellis, il est ajouté à la racine. Sinon, $\forall y \in Y$, l'ensemble des n\oe uds les plus généraux tels que $R(x,y)$ est vraie, $x$ devient un fils de $y$ et $\forall z \in fils(y)$ tel que $R(z,x)$ est vérifiée, $z$ devient un fils de $x$. Si nous avons deux n\oe uds $y_{1}$ et $y_{2} \in Y$ tels que $R(y_{1},y_{2})$ est vraie, alors $y_{2}$ est supprimé de $Y$. Un tel trellis est illustré dans la figure \ref{fig:hierarchy}. En sélectionnant les traits selon un parcours en largeur, il est possible d'avoir une bonne diversité de façon simple : en effet, dans un tel graphe, deux voisins ne reconnaissent pas les mêmes sous-chaînes, la recherche en largeur étant une façon de donner la priorité aux traits les plus différents. Le tableau \ref{} donne un exemple de phrase enrichie par ces traits.
+
+\begin{figure}[ht!]
+\centering
+\begin{tikzpicture}
+    \GraphInit[vstyle=shade]
+    \SetGraphShadeColor{blue!10!white}{white}{black}
+    \Vertex{racine}
+    \Vertex[x=-5,y=-2.5]{benzo}
+    \Vertex[x=-1.5,y=-2.5]{carboxy}
+    \Vertex[x=1.5,y=-2.5]{hydroxy}
+    \Vertex[x=5,y=-2.5]{methyl}
+    \Vertex[x=-3.25,y=-5]{carbo}
+    \Vertex[x=0,y=-5]{oxy}
+    \Vertex[x=3.25,y=-5]{hydro}
+    \Vertex[x=6.5,y=-5]{ethyl}
+    \tikzset{EdgeStyle/.style = {->}}
+    \Edge(racine)(benzo)
+    \Edge(racine)(carboxy)
+    \Edge(racine)(hydroxy)
+    \Edge(racine)(methyl)
+    \Edge(methyl)(ethyl)
+    \Edge(carboxy)(carbo)
+    \Edge(carboxy)(oxy)
+    \Edge(hydroxy)(hydro)
+    \Edge(hydroxy)(oxy)
+\end{tikzpicture}
+\caption{exemple de traits hiérarchisés}
+\label{fig:hierarchy}
+\end{figure}
+
+\begin{table}[ht!]
+\centering
+\footnotesize
+\begin{tabular}{|p{0.21\linewidth}|c|c|p{0.13\linewidth}|c|}
+\hline
+token & préfixe & suffixe & infixes & étiquette\\
+\hline
+samples & sa & les & amp mp pl & O\\
+\hline
+were & we & re & er & O\\
+\hline
+tested & tes & ted & est ste & O\\
+\hline
+using & u & ing & sin in & O\\
+\hline
+MTT & MT & T & T & B-ABBREVIATION\\
+\hline
+( & & & & O\\
+\hline
+3-(4,5-dimethylthiazol-2yl)-2,5-diphenyltetrazolium & 0-(0,0-dimethyl & diphenyltetrazolium & tetrazolium diphenyl dimethyl thiazol & B-SYSTEMATIC\\
+\hline
+bromide & bromi & bromide & romi omid ide & I-SYSTEMATIC\\
+\hline
+) &  &  &  & O\\
+\hline
+assay & as & y & as sa ss & O\\
+\hline
+\end{tabular}
+\caption{Des exemples d'enrichissement avec des affixes sur CHEMDNER. Les cellules vides indiquent qu'aucun trait n'a pu être généré}
+\label{tab:affixes-example}
+\end{table}
+
+\end{document}

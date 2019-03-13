@@ -1,0 +1,58 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+De manière générale, la mesure de la qualité d'un système peut se faire selon deux approches : la première est de mesurer sa correction, auquel cas un score plus grand signifie plus de qualité, la seconde est de mesurer un taux d'erreur, auquel cas plus le score est bas, meilleur est le système. De manière générale, quatre chiffres sont utilisés afin de calculer ces différentes mesures :
+
+\begin{itemize}
+\item les vrai positifs (VP) : le nombre d'éléments corrects renvoyés par le système.
+\item les faux positifs (FP) : le nombre d'éléments incorrects renvoyés par le système. Ils sont également appelé le \emph{bruit}.
+\item les vrai négatifs (VN) : le nombre d'éléments non renvoyés par le système, et absents de la référence.
+\item les faux négatifs (FN) : le nombre d'éléments non renvoyés par le système, mais présents dans la référence. Ils sont également appelés le \emph{silence}.
+\end{itemize}
+
+Par la suite, nous utiliserons ces quantités afin de définir les différentes mesures. Ces mesures générales définies, il convient de décrire les critères selon lesquels une entité est estimée bonne ou mauvaise. Comme nous l'avons vu précédemment, une entité peut être ou plusieurs tokens, deux entités n'ayant aucun token en commun n'étant pas comparables. Le premier critère pour comparer deux entités, donc, est si leurs frontières, a minima, se chevauchent un minimum. On considère généralement que deux entités peuvent être comparées si elles ont au moins une frontière en commun. De manière générale, on considère une entité nommée comme étant correcte si son type et ses frontières sont exacts.
+
+\subsection{La f-mesure}
+
+Le F$_{1}$-score \citep{van1979information}, plus communément appelé la f-mesure, est le score de référence pour de nombreuses tâches d'annotations. Il s'agit en fait d'une moyenne harmonique entre deux mesures complémentaires. Nous mesurons d'une part la précision d'un système, c'est-à-dire la proportion des annotations correctes parmi l'ensemble des annotations proposées par le système, et d'autre part nous mesurons son rappel, ou la proportion d'annotations correctes parmi celles qu'il devait retrouver. Notons $\mathcal{C}$ l'ensemble des classes à apprendre. Le F1-score est la moyenne harmonique de la précision et du rappel. Étant donné une classe $c \in \mathcal{C}$, le F1-score se mesure de la façon suivante :
+
+\begin{equation}\label{eq:f1score-one-class}
+\begin{aligned}
+precision_{c} &= \frac{corrects_{c}}{suggestions_{c}} &= \frac{VP_{c}}{VP_{c} + FP_{c}}\\
+rappel_{c} &= \frac{corrects_{c}}{appartenants_{c}} &= \frac{VP_{c}}{VP_{c} + FN_{c}} \\
+f1score_{c} &= 2 * \frac{precision_{c} * rappel_{c}}{precision_{c} + rappel_{c}} \\
+\end{aligned}
+\end{equation}
+
+Les valeurs de rappel, précision et F-mesure globaux étant alors :
+
+\begin{equation}\label{eq:f1score-global}
+\begin{aligned}
+precision &= \frac{\sum_{c \in \mathcal{C}} corrects_{c}}{\sum_{c \in \mathcal{C}} suggestions_{c}} &= \frac{\sum_{c \in \mathcal{C}} (VP_{c})}{\sum_{c \in \mathcal{C}} (VP_{c} + FP_{c})} \\
+rappel &= \frac{\sum_{c \in \mathcal{C}} corrects_{c}}{\sum_{c \in \mathcal{C}} appartenants_{c}} &= \frac{\sum_{c \in \mathcal{C}} VP_{c}}{\sum_{c \in \mathcal{C}} (VP_{c} + FN_{c})} \\
+f1score &= 2 * \frac{precision * rappel}{precision + rappel} \\
+\end{aligned}
+\end{equation}
+
+\subsection{Le \emph{Slot Error Rate} (SER)}
+\label{subsec:SER}
+
+Le Slot Error Rate \citep{makhoul1999performance} est un taux d'erreur visant à décrire les erreurs d'un système lorsque les décisions de ce dernier ont un ensemble de valeurs alignables. Si nous reprenons le dernier exemple fourni dans la section \ref{sec:NE-introduction}, les deux valeurs qu'une entité nommée a sont son type et son étendue. Le SER distingue trois type d'erreurs différentes : les substitutions (les entités incorrectes que l'on peut aligner avec une entité de la référence), les insertions (les entités données par le système ne s'alignant pas avec une annotation de référence) et les suppressions (les entités de la référence que l'on ne peut pas aligner avec une sortie du système). Le SER est le rapport entre la somme entre ces trois types d'erreurs et le nombre d'éléments dans l'annotation de référence :
+
+\begin{equation}\label{eq:SER-base}
+SER = \frac{S + D + I}{N} = \frac{FP + FN}{VP + FN}
+\end{equation}
+
+Où S est le nombre de substitutions, D le nombre de suppressions, I le nombre d'insertions et N le nombre d'éléments dans l'ensemble de référence. Il est à noter que la mesure du SER n'indique pas «\ comment aligner l'hypothèse et la référence ou comment décider qu'un slot est correct ou non\ », cette mesure suppose que les alignements sont faits préalablement et lui sont donnés en entrée. Cette mesure peut être supérieure à 1 dans le cas où $FP > VP$. Cela est intentionnel afin de représenter les scénarios où le bruit est très important.
+
+Il existe des variantes au SER de base, qui consistent à appliquer des facteurs à certaines erreurs. L'une des plus poulaires est d'attribuer un facteur de 0,5 à deux types d'erreurs : les erreurs de type et les erreurs de frontière. Ces deux types d'erreurs sont des sous-types d'erreurs de substitutions, ces dernières pouvant s'aligner avec un élément de l'ensemble de référence. Le SER ainsi pondéré s'écrit de la façon suivante :
+
+\begin{equation}\label{eq:SER-weighted}
+SER = \frac{0.5*(S_{t} + S_{b}) + S_{t+b} + D + I}{N}
+\end{equation}
+
+Cette mesure a notamment été utilisée par la communauté du traitement de la parole. Elle a été notamment utilisée dans les campagnes d'évaluation Quaero \citep{galibert2011structured} et ETAPE \citep{gravier2012etape}, qui utilisaient les annotations structurées Quaero (décrites dans la section \ref{subsec:corpus-quaero}).
+
+%\subsection{Le \emph{Entity Tree Error Rate} (ETER)}
+
+\end{document}

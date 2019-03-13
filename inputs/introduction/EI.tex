@@ -1,0 +1,61 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+L'extraction d'information (EI) est une tâche qui consiste à retrouver de façon automatisée les éléments d'intérêt présents dans des documents, ainsi que de les mettre en relation les uns avec les autres \citep{yangarber2000automatic}. L'EI a donc pour but de donner à un être humain l'accès aux connaissances présentes dans les documents via leur extraction et leur structuration automatique.
+
+L'EI peut se décrire comme le remplissage automatique d'un formulaire aux champs prédéfinis dans le but d'alimenter une base de connaissances \citep{pazienza1997information} qui pourra par la suite être consultée par des êtres humains. Une façon de représenter ces connaissances est de remplir automatiquement des formulaires en rapport avec les documents à analyser. Chaque formulaire contient un ensemble d'informations fixé que les systèmes de TAL doivent retrouver de manière automatique. Un exemple d'un document et d'un formulaire rempli lui correspondant est donné dans la figure \ref{fig:muc3-example}.
+
+\begin{figure}[ht!]
+\footnotesize
+\begin{tcolorbox}[fonttitle=\bfseries,title=Message]
+\begin{helvetica}
+TST1-MUC3-0080\\
+
+BOGOTA, 3 APR 90 (INRAVISION TELEVISION CADENA 1) - [REPORT] [JORGE ALONSO SIERRA VALENCIA] [TEXT] LIBERAL SENATOR FEDERICO ESTRADA VELEZ WAS KIDNAPPED ON 3 APRIL AT THE CORNER OF 60TH AND 48TH STREETS IN WESTERN M.EDELLIN, ONLY 100 METERS FROM A METROPOLITAN POLICE CAI [IMMEDIATE ATTENTION CENTER]. THE ANTIOQUIA DEPARTMENT LIBERAL PARTY LEADER HAD LEFT HIS HOUSE WITHOUT ANY BODYGUARDS ONLY MINUTES EARLIER. AS HE WAITED FOR THE TRAFFIC LIGHT TO CHANGE, THREE HEAVILY ARMED MEN FORCED HIM TO GET OUT OF HIS CAR AND INTO A BLUE RENAULT.\\
+
+HOURS LATER, THROUGH ANONYMOUS TELEPHONE CALLS TO THE METROPOLITAN POLICE AND TO THE MEDIA, THE EXTRADITABLES CLAIMED RESPONSIBILITY FOR THE KIDNAPPING. IN THE CALLS, THEY ANNOUNCED THAT THEY WILL RELEASE THE SENATOR WITH A NEW MESSAGE FOR THE NATIONAL GOVERNMENT.\\
+
+LAST WEEK, FEDERICO ESTRADA VELEZ HAD REJECTED TALKS BETWEEN THE GOVERNMENTAND THE DRUG TRAFFICKERS.
+\end{helvetica}
+\end{tcolorbox}
+\begin{tcolorbox}[fonttitle=\bfseries,title=Fiche]
+\texttt{
+\begin{tabular}{ll}
+0. MESSAGE ID                    & TSTI-MUC3-O080 \\
+1. TEMPLATE ID                   & 1 \\
+2. DATE OF INCIDENT              & 03 APR 90 \\
+3. TYPE OF INCIDENT              & KIDNAPPING \\
+4. CATEGORY OF INCIDENT          & TERRORIST ACT \\
+5. PERPETRATOR: ID OF INDIV(S)   & THREE HEAVILY ARMED MEN \\
+6. PERPETRATOR: ID OF ORG(S)     & THE EXTRADITABLES \\
+7. PERPETRATOR: CONFIDENCE       & CLAIMED OR ADMITTED: "THE EXTRADITABLES" \\
+8. PHYSICAL TARGET: ID(S)        & * \\
+9. PHYSICAL TARGET: TOTAL MUM    & * \\
+i0. PHYSICAL TARGET: TYPE(S)     & * \\
+ii. HUMAN TARGET: ID(S)          & FEDERICO ESTRADA VELEZ" ("LIBERAL SENATOR") \\
+12. HUMAN TARGET: TOTAL MUM      & 1 \\
+13. HUMAN TARGET: TYPE(S)        & GOVERNMENT OFFICIAL: "FEDERICO ESTRADA VELEZ \\
+14. TARGET: FOREIGN NATION(S)    & - \\
+15. INSTRUMENT: TYPE(S)          & * \\
+16. LOCATION OF INCIDENT         & COLOMBIA: MEDELLIN (CITY) \\
+17. EFFECT ON PHYSICAL TARGET(S) & * \\
+18. EFFECT ON HUMAN TARGET(S)    & - \\
+\end{tabular}
+}
+\end{tcolorbox}
+
+\caption{Exemple de document et de son formulaire rempli. Ces formulaires étaient le but de MUC-3 \citep{chinchor1993evaluating}}
+\label{fig:muc3-example}
+\end{figure}
+
+Le formulaire de l'exemple en figure \ref{fig:muc3-example} représente un évènement, pour lequel diverses informations doivent être extraites :
+
+\begin{itemize}
+    \item des informations générales le concernant : son type, son lieu et sa date.
+    \item ses acteurs : les auteurs et les victimes.
+    \item les moyens et conséquences immédiates de l'évènement.
+\end{itemize}
+
+Nombre de ces informations rentrent dans le cadre de la reconnaissance des entités nommées. C'est notamment le cas des acteurs de l'évènement, qui sont soit des personnes, soit des organisations. Dans la section suivante, nous détaillerons donc l'objet nous intéressant dans cette thèse, à savoir les entités nommées.
+
+\end{document}

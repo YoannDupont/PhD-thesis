@@ -1,0 +1,117 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Dans le cadre de l'extraction de relations, l'analyse en dépendances syntaxiques permet l'obtention de bons résultats, comme l'a souligné \cite{bach2007review}. Elles permet notamment d'établir des liens plus précis entre deux éléments du texte qu'une simple analyse de leur contexte gauche et droit. Pour effectuer cette analyse, nous avons utilisé le MaltParser \citep{nivre2006maltparser} que nous avons entrainé sur le corpus \emph{Universal dependencies} (UD) \citep{nivre2016universal}. Cette analyse dépend de la segmentation des tokens et leur analyse morphosyntaxique, qui sont deux points sur lesquels les systèmes tendent à différer régulièrement.
+
+Le corpus Universal Dependencies a pris le parti d'effectuer une segmentation plutôt importante des tokens (par exemple, les tirets sont isolés) et de baser l'annotation morphosyntaxique sur le Stanford. Cela pose deux problèmes, Le premier est un problème au niveau des annotations en elles-mêmes, que l'on peut aisément adapter. Le second, plus compliqué, est la différence entre les segmentations des différents systèmes. Le but étant de pouvoir utiliser de nombreux systèmes d'analyse en entrée, nous ne devions pouvoir nous adapter au mieux au système utilisé. Le choix que nous avons retenu dans le cadre de l'analyse en dépendances a été d'adapter le corpus UD afin qu'il soit cohérent avec le système lui servant d'entrée, autant au niveau de la segmentation que de l'annotation, comme illustré dans la figure\ \ref{fig:dependency-example1}. Pour ce faire, nous avons mis en place un processus permettant d'adapter le corpus à un système donné fonctionnant selon ces grandes passes:
+
+\begin{enumerate}
+    \item analyser le corpus avec un système S
+    \item aligner les phrases de S avec celles du corpus UD
+    \item aligner les dépendances du corpus UD avec la segmentation fournie par S
+\end{enumerate}
+
+Des différences peuvent émerger sur les segmentations en phrases lors de l'analyse par un système donnée. En effet, certains découpages effectués dans le corpus UD ne correspondent pas à des phrases à proprement parler, ces derniers étant effectués au niveau de toutes les ponctuations fortes sans exception, ce qui inclut notamment les deux-points. En ce qui concerne l'alignement des dépendances sur la segmentation d'un système, nous avons dégagé trois types de différences de segmentation, chacun étant traité de façon particulière :
+\begin{enumerate}
+    \item le système fournit moins de tokens que le corpus $\implies$ les tokens sont regroupés avec la dépendance jugée la plus pertinente (cf figure\ \ref{fig:dependency-example1}, cas bleu)
+    \item le système fournit plus de tokens que le corpus $\implies$ des dépendances de remplissage "compound" sont créées (cf figure\ \ref{fig:dependency-example1}, cas vert)
+    \item si les segmentations sont incompatibles, la phrase est retirée car l'analyse en dépendances devient incohérente $\implies$ figure\ \ref{fig:dependency-example2}, cas rouge.
+\end{enumerate}
+
+\begin{figure}[ht!]
+\centering
+\begin{dependency}[theme = simple]
+   \begin{deptext}[column sep=1.75em]
+      i \& \textcolor{blue}{do} \& \textcolor{blue}{n't} \& want \& it \& \textcolor{green!80!black}{b/c} \& of \& the \& taco \& bell \& dog \\
+   \end{deptext}
+   \deproot{4}{root}
+   \depedge{4}{1}{subj}
+   \depedge{4}{2}{aux}
+   \depedge{4}{3}{neg}
+   \depedge{4}{5}{dobj}
+   \depedge{11}{6}{case}
+   \depedge{6}{7}{mwe}
+   \depedge{11}{8}{det}
+   \depedge{10}{9}{compound}
+   \depedge[edge start x offset=-3pt]{11}{10}{compound}
+   \depedge{4}{11}{nmod}
+\end{dependency}
+\begin{dependency}[theme = simple]
+   \begin{deptext}[column sep=1.75em]
+      i \& \textcolor{blue}{don't} \& want \& it \& \textcolor{green!80!black}{b} \& \textcolor{green!80!black}{/} \& \textcolor{green!80!black}{c} \& of \& the \& taco \& bell \& dog \\
+   \end{deptext}
+   \deproot{3}{root}
+   \depedge{3}{1}{subj}
+   \depedge{3}{2}{aux}
+   \depedge{3}{4}{dobj}
+   \depedge{6}{5}{compound}
+   \depedge{7}{6}{compound}
+   \depedge{12}{7}{case}
+   \depedge{7}{8}{mwe}
+   \depedge{12}{9}{det}
+   \depedge{11}{10}{compound}
+   \depedge[edge start x offset=-3pt]{12}{11}{compound}
+   \depedge{3}{12}{nmod}
+\end{dependency}
+\caption{En haut, l'exemple extrait d'Universal Dependencies. En bas, le même exemple adapté au système Luxid.}
+\label{fig:dependency-example1}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\begin{dependency}[theme = simple]
+   \begin{deptext}[column sep=1.75em]
+      we \& are \& the \& one's \& issuing \& the \& gtee \& and \& \textcolor{red}{l/c} \& \textcolor{red}{.} \\
+   \end{deptext}
+   \deproot{5}{root}
+   \depedge{5}{1}{subj}
+   \depedge{5}{2}{aux}
+   \depedge{4}{3}{det}
+   \depedge{5}{4}{advcl}
+   \depedge{7}{6}{det}
+   \depedge{5}{7}{dobj}
+   \depedge{7}{8}{cc}
+   \depedge{7}{9}{conj}
+   \depedge{5}{10}{punct}
+\end{dependency}
+\begin{dependency}[theme = simple]
+   \begin{deptext}[column sep=1.75em]
+      we \& are \& the \& one's \& issuing \& the \& gtee \& and \& \textcolor{red}{l} \& \textcolor{red}{/} \& \textcolor{red}{c.} \\
+   \end{deptext}
+   \deproot{5}{root}
+   \depedge{5}{1}{subj}
+   \depedge{5}{2}{aux}
+   \depedge{4}{3}{det}
+   \depedge{5}{4}{advcl}
+   \depedge{7}{6}{det}
+   \depedge{5}{7}{dobj}
+   \depedge{7}{8}{cc}
+   \depedge{10}{9}{\textcolor{red}{compound?}}
+   \depedge{11}{10}{\textcolor{red}{compound?}}
+   \depedge{7}{11}{\textcolor{red}{conj?}}
+   \depedge{5}{11}{\textcolor{red}{punct?}}
+\end{dependency}
+\caption{exemple de segmentation incompatible. En haut, l'exemple extrait d'Universal Dependencies. En bas, la segmentation de Luxid.}
+\label{fig:dependency-example2}
+\end{figure}
+
+Nous avons ainsi pu adapter un corpus d'analyse en dépendances et effectuer des apprentissages avec ce corpus nouvellement constitué, nous avons entrainé les analyseurs sur le corpus UD avec l'algorithme \emph{eager}, plus rapide car en temps linéaire (contre cubique), mais moins performant en termes de qualité des résultats. Nous avons donc pu adapter la tâche d'analyse en dépendances pour qu'elle corresponde mieux aux sorties de nos analyseurs et avoir une suite de traitements qui demeurent cohérents les uns avec les autres. Les résultats obtenus par l'analyseur en dépendances adaptés aux outils Luxid comparés à celui appris sur le corpus sans modifications sont donnés dans le tableau\ \ref{tab:dependencies-luxid-vs-UD}, les résultats ont été calculés par MaltEval \citep{nilsson2008malteval}. Nous pouvons noter une légère amélioration des résultats sur les scores de dépendances étiquetées, bien que cela soit intéressant en soi, l'idée était plus d'avoir un analyseur cohérent avec les entrées données, les résultats montrent bien que l'analyseur en dépendances ainsi entrainé est comparable en termes de qualité avec celui que nous aurions eu à l'aide d'annotations de base, ce qui prouve bien l'intérêt de la méthode.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|l|c|c|}
+\cline{2-3}
+\multicolumn{1}{l|}{}      & UD    & Luxid \\
+\hline
+Labeled attachment score   & 74.66 & 76.74 \\
+Unlabeled attachment score & 86.23 & 82.75 \\
+Label accuracy score       & 80.74 & 83.84 \\
+\hline
+\end{tabular}
+\caption{comparaison des résultats des analyeurs en dépendances.}
+\label{tab:dependencies-luxid-vs-UD}
+\end{table}
+
+Malheureusement, les dépendances ne purent être finalisées à temps pour le défi KBP, ce qui ne nous a pas permis de tester leur importance. C'est l'une des raisons pour lesquelles les résultats, que nous avons détaillés dans la section \ref{sec:tac-kbp} n'en tiennent pas compte. L'ajout des dépendences syntaxiques aurait sans doute permis d'obtenir de meilleurs résultats.
+
+\end{document}

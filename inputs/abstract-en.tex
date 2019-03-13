@@ -1,0 +1,16 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Named entity recognition is a crucial discipline of NLP. It is used to extract relations between named entities, which allows the construction of knowledge bases \citep{surdeanu2014overview}, automatic summary \citep{nobata2002summarization} and so on. Our interest in this thesis revolves around structuration phenomena that surround them.
+
+We distinguish here two kinds of structural elements in named entities. The first one are recurrent substrings, that we will call the \emph{caracteristic affixes} of a named entity. The second type of element is tokens with a good discriminative power, which we call \emph{trigger tokens} of named entities. We will explain here the algorithm we provided to extract such affixes, which we will compare to Morfessor \citep{creutz2005unsupervised}. We will then apply the same algorithm to extract trigger tokens, which we will use for French named entity recognition and postal address extraction.
+
+Another form of structuration for named entities is of a syntactic nature. It follows an overlapping or tree structure. We propose a novel kind of linear tagger cascade which have not been used before for structured named entity recognition, generalising other previous methods that are only able to recognise named entities of a fixed depth or being unable to model certain characteristics of the structure. Ours, however, can do both.
+
+Throughout this thesis, we compare two machine learning methods, CRFs and neural networks, for which we will compare respective advantages and drawbacks.
+
+\begin{flushleft}
+\textbf{keywords} : named entity recognition, structured named entities, machine learning, conditional random fields, neural networks
+\end{flushleft}
+
+\end{document}

@@ -1,0 +1,161 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Le corpus d'addresses de \citet{yu2007high} est particulièrement indiqué pour cette méthode, les addresses ayant une structuration définie et riche, autant en nombres d'éléments différents que lexicalement. De nombreux tokens ayant une ou plusieurs formes abrégées, une certaine ambiguité avec le vocabulaire courant peut survenir également. La simple reconnaissance des tokens n'est donc pas suffisante en soi, il est nécesaire de déterminer lorsque ces derniers forment une séquence valide pour constituer une addresse. La structuration d'une telle entité étant plutôt rigide, obtenir une forte précision n'est pas difficile : le véritable défi de la reconnaissance des addresses reposera donc principalement sur l'amélioration du rappel.
+
+Le corpus de \citet{yu2007high} est divisé en trois parties : contact, hotel et pizza. Nous avons utilisé les deux premières partie pour l'apprentissage et la troisième partie pour le test. \citet{yu2007high} avait construit un ensemble d'apprentissage, développement et test de manière aléatoire. Nous avons analysé le corpus en termes d'annotation POS avec le \textit{Stanford POS tagger} \citep{toutanova2003feature} et constitué le répertoires des tokens déclencheurs à partir d'un document de la \emph{United States Postal Services} (USPS)\footnote{disponible à l'adresse: \url{http://pe.usps.com/cpim/ftp/pubs/Pub28/pub28.pdf}}. La taxonomie du répertoire que nous avons utilisée dans le cadre de cette expérience est disponible dans la figure\ \ref{fig:usps-address-ontology}.
+
+Les principaux systèmes utilisés par \citet{yu2007high} sont les suivants : un système à base d'expressions régulières, un système de règles se basant sur des lexiques et un système par apprentissage automatique à l'aide d'arbres de décision sur des observations locales (ce système n'utilise aucun dictionnaire). Divers systèmes hybrides sont également utilisés. Ces systèmes hybrides consistent à ajouter des informations des systèmes à base de règles dans celui à base d'apprentissage automatique. Le plus complet fonctionne de la façon suivante : premièrement, le système à base d'expressions régulières donne une première annotation candidate, puis les différents lexiques sont appliqués, le tout servant d'entrée à l'algorithme d'apprentissage automatique.
+
+\begin{figure}[ht!]
+\begin{minipage}{0.49\linewidth}
+\centering
+\small
+\begin{forest}
+  for tree={
+    grow'=0,
+    child anchor=west,
+    parent anchor=south,
+    anchor=west,
+    calign=first,
+    inner xsep=7pt,
+    edge path={
+      \noexpand\path [draw, \forestoption{edge}]
+      (!u.south west) +(7.5pt,0) |- (.child anchor) pic {folder} \forestoption{edge label};
+    },
+    before typesetting nodes={
+      if n=1
+        {insert before={[,phantom]}}
+        {}
+    },
+    fit=band,
+    before computing xy={l=15pt},
+  }  
+[address
+    [country]
+    [city]
+    [country code]
+    [US state]
+    [secondary unit]
+]
+\end{forest}
+\end{minipage}
+\begin{minipage}{0.49\linewidth}
+\centering
+\small
+\begin{forest}
+  for tree={
+    grow'=0,
+    child anchor=west,
+    parent anchor=south,
+    anchor=west,
+    calign=first,
+    inner xsep=7pt,
+    edge path={
+      \noexpand\path [draw, \forestoption{edge}]
+      (!u.south west) +(7.5pt,0) |- (.child anchor) pic {folder} \forestoption{edge label};
+    },
+    before typesetting nodes={
+      if n=1
+        {insert before={[,phantom]}}
+        {}
+    },
+    fit=band,
+    before computing xy={l=15pt},
+  }  
+[
+    [thoroughfare]
+    [PO box]
+    [cardinal point]
+    [nth]
+    [zip-code]
+    [street-number]
+]
+\end{forest}
+\end{minipage}
+\caption{Le répertoire utilisée pour la reconnaissance d'adresses}
+\label{fig:usps-address-ontology}
+\end{figure}
+
+Le répertoire constitué, nous avons utilisé différents remplacement pour les tokens non reconnus : aucune substitution, substitution par les tokens, subtitution par les POS et substitution par le chunking. Chaque substitution constitue une annotation particulière du corpus, il n'y a donc pas de substitution qui comprenne à la fois des tokens et des POS par exemple. Pour chaque expérience, nous avons trouvé qu'une fenêtre de deux tokens avant et deux après, ainsi que les couples de tokens sur cette même fenêtre, donnait une qualité optimale. Des combinaisons de taille supérieure réduisaient systématiquement la qualité du modèle, autant en précision qu'en rappel, tout en donnant une qualité similaire à l'apprentissage : les combinaisons de taille 3 et plus donnaient donc lieu à un surapprentissage du modèle. Les traits décrits sont systématiquement des unigrammes, nous avons pu améliorer la qualité de nos modèles en rajoutant les bigrams du token précédent et du token courant de chaque substitution, sans combiner les différents descripteurs entre eux. Nous avons également ajouté quelques traits booléens aux traits de type POS, à savoir si le token commence par une majuscule et si le token est entièrement en majuscules. Un exemple de phrase enrichie est donné dans le tableau \ref{tab:address-feature-example}.
+
+\begin{table}[ht!]
+\begin{tabular}{|c|cccc|}
+\cline{4-5}
+\multicolumn{1}{c}{} & & & \multicolumn{2}{|c|}{booleéns} \\
+\hline
+texte  & r/tokens & r/POS & commenceMajuscule? & ToutMajuscule? \\
+\hline
+22     & number & number & 0 & 0 \\
+Acacia & Acacia & Acacia & 1 & 0 \\
+Avenue & thoroughfare & thoroughfare & 1 & 0 \\
+,      & , & , & 0 & 0 \\
+UK     & country & country & 1 & 1 \\
+\hline
+\end{tabular}
+\caption{Exemples de traits utilisés sur les corpus d'adresses.}
+\label{tab:address-feature-example}
+\end{table}
+
+Les différents résultats que nous avons obtenus sur le corpus des adresses sont donnés dans le tableau\ \ref{tab:address-quality}. Nous avons constitué notre baseline en utilisant les tokens, les préfixes et suffixes des tokens jusqu'à une taille de 5, ainsi que quelques traits booléens comme la capitalisation, si le token est un nombre ou s'il contient un tiret, le tout sur une fenêtre de deux tokens avant et deux tokens après. Nous avons également mis l'ensemble des systèmes hybrides utilisés par \cite{yu2007high}, ces derniers donnant les meilleures qualités globales.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|c|ccc|}
+\hline
+traits            & précision & rappel & f-mesure\\
+\hline
+baseline          & 84.99     & 70.27  & 76.93 \\
+sans substitution & 81.15     & 70.91  & 75.68 \\
+r/tokens            & \underline{93.05}     & 60.11  & 73.03 \\
+r/POS             & 90.20     & \underline{72.83}  & \underline{80.59} \\
+r/chunking        & 88.99     & 71.76  & 79.46 \\
+\hline
+r/tokens + r/POS                      & \underline{94.51} & 71.87             & 81.65 \\
+r/tokens + r/POS + booléens           & 93.52             & 74.12             & 82.70 \\
+r/tokens + r/POS + booléens (ambigüe) & 92.33             & 72.09             & 80.96 \\
+tokens + r/POS + booléens             & 94.39             & \underline{79.14} & \underline{86.10} \\
+\hline
+\citet{yu2007high} (ML + lexiques)         & 94.3 & 78.4 & 85.6 \\
+\citet{yu2007high} (ML + regex)            & 95.2 & \underline{\textbf{81.1}} & \underline{\textbf{87.6}} \\
+\citet{yu2007high} (ML + regex + lexiques) & \underline{\textbf{95.3}} & \underline{\textbf{81.1}} & \underline{\textbf{87.6}} \\
+\hline
+\end{tabular}
+\caption{les différentes expériences sur les adresses. Les traits notés "r/I" indique que l'information I est utilisée si le token courant n'est pas reconnu par le répertoire. Les système de \citet{yu2007high} sont les différents systèmes hybrides décrits selon les informations que ces derniers utilisent.}
+\label{tab:address-quality}
+\end{table}
+
+Nous pouvons observer que nous améliorons presque systématiquement notre baseline avec les traits tels que décrits précédemment. Le seul cas ne l'améliorant pas est celui où aucune substitution n'a été faite, ce qui montre bien leur intérêt. Nous voyons également qu'utiliser la substitution par les tokens et la substitution par les POS donne la meilleure qualité globale. Individuellement, les tokens donnent la meilleure précision et les POS donnent le meilleur rappel ainsi que la meilleure f-mesure, nous avions l'espoir qu'en utilisant les deux traits, nous pouvions améliorer la qualité globale du modèle. La substitution des tokens non reconnus par l'étiquette du chunking donne une qualité inférieure qu'en substituant par le POS, sans pour autant apporter de réduction de volume significative au modèle et n'améliore pas significativement la durée d'apprentissage ou d'annotation. L'ajout des traits booléens a permis d'améliorer la f-mesure de presque un point, améliorant significativement le rappel (+2.25) mais au détriment, moins important, de la précision (-1.49). Nous avons ainsi pu améliorer de façon significative notre modèle par rapport à notre baseline, autant en termes de précision (+8.03) qu'en termes de rappel (+3.91). L'ajout de l'ensemble des ambiguités présentes dans les lexiques a causé une baisse non négligeable de la qualité, en précision mais surtout en rappel. Il semble donc que le CRF ne parvienne pas à tirer profit de l'amiguité des types et que choisir le bon ordre de priorité pour les lexiques soit une meilleure piste pour améliorer le modèle. Par exemple, en reprenant la figure\ \ref{fig:usps-address-ontology}, si nous inversions la priorité de \emph{city} et de \emph{US state}, nous aurions observé une perte de qualité de 0.3 points sur la f-mesure.
+
+Nous avons également amélioré les résultats décrits par \citet{yu2007high} pour le système hybride \texttt{"ML + lexiques"}, qui est le système se rapprochant le plus de notre système final. Nous avons obtenu de meilleurs résultats autant en termes de précision que de rappel, ce qui montre l'efficaté de notre approche. Nous ne sommes actuellement pas parvenus à améliorer les meilleurs résultats qu'il était arrivé à atteindre, mais avons bon espoir de réussir dans un avenir proche, mais ces expériences n'ont pu être menées par manque de temps dans le cadre de la thèse.
+
+Malgré toutes les améliorations, le silence est la mesure la plus difficile à améliorer : en effet, nombre d'adresses ne sont pas extraites malgré l'utilisation de ce type de traits. Les erreurs de précision demeurent minoritaires et sont le plus souvent des erreurs de frontière, moins d'un demi pourcent des annotations fournies par le CRF sont des annotations bruitées. Les erreurs de silence sont assez difficiles à appréhender, la majorité des adresses silencieuses étant bien formées, mais ne sont pourtant pas annotées. Nous avons noté des erreurs de segmentation : certains tokens étaient collés les uns aux autres (notamment des voies), ce qui fait que les dictionnaires ne pouvaient pas les reconnaître correctement.
+
+Dans le corpus, les adresses avaient une structure plate, ce qui rend leur reconnaissance plus difficile. En effet, de nombreux noms de rue portent des noms de personnes, de dates ou d'évènements. La reconnaissance des adresses serait bien plus efficace si ses éléments constitutifs étaient annotés également, plutôt que d'être devinés via des lexiques. Elles auraient alors une structuration arborée, comme indiqué dans la figure \ref{fig:address-tree}. Ces entités arborées seront l'objet de notre prochain chapitre.
+
+\begin{figure}
+\centering
+\begin{forest}
+[adresse
+  [\textcolor{red}{num\'{e}ro-rue}
+    [1]
+  ]
+  [\textcolor{red}{type-voie}
+    [rue]
+  ]
+  [\textcolor{red}{nom-rue}
+    [\textcolor{blue}{personne}
+        [\textcolor{red}{pr\'{e}nom} [Maurice]]
+        [\textcolor{red}{nom} [Arnoux]]
+    ]
+  ]
+  [{,}]
+  [\textcolor{red}{code-postal} [92120]]
+  [\textcolor{blue}{ville} [Montrouge]]
+]
+\end{forest}
+\caption{exemple d'annotation arborée pour une adresse}
+\label{fig:address-tree}
+\end{figure}
+
+\end{document}

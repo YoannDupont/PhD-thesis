@@ -1,0 +1,41 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Comme dit précédemment, multir se base sur un jeu de traits devant être générés, il convient donc d'utiliser des traits suffisamment génériques pour être couvrants, mais suffisamment précis afin de limiter le bruit. Par exemple, utiliser les formes des entités dont on cherche à extraire la relation est un trait précis, mais qui ne se généralise pas : il a tendance à mener à un surapprentissage. À l'inverse, utiliser la séquence des catégories syntaxiques des tokens entre les entités n'est pas un trait précis, mais va permettre d'obtenir une bonne couverture. La liste détaillée des traits utilisée par \cite{mintz2009distant} est partiellement décrite dans la figure\ \ref{tab:Mintz-features}. Les traits que nous avons utilisés sont des traits lexicaux :
+\begin{enumerate}
+    \item les tokens, lemmes et catégories morphosyntaxiques à gauche, entre et à droite des mentions;
+    \item ces même tokens, mais filtrés par catégorie : uniquement les noms et uniquement les verbes;
+    \item les types des entités;
+    \item les types des entités combinés à l'ensemble des autres traits;
+\end{enumerate}
+
+Il existe deux différences principales entre le jeu de traits utilisé par \citet{mintz2009distant} et le nôtre. La première est l'utilisation de la lemmatisation, que \cite{mintz2009distant} n'utilise pas. La seconde est dans la combinaison des différents traits utilisés par le système : là où \citet{mintz2009distant} utilise des traits très précis, les nôtres demeurent assez généraux. Prenons la première ligne du tableau\ \ref{tab:Mintz-features}\ :\ cette ligne correspond à un seul trait dans le système de \citet{mintz2009distant}, tandis qu'elle correspond à trois traits différents dans le nôtre, chaque contexte étant considéré indépendamment.
+
+Nous avons également voulu intégrer des traits se basant sur de dépendances syntaxiques, mais n'avons pu finir par manque de temps.
+
+\begin{figure}[ht!]
+\centering
+\scriptsize
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+Type trait & contexte gauche & NE1 & contexte médian &  NE2 & contexte droit \\
+\hline
+lexical & [] & PERS & [was born in] & LOC & [] \\
+lexical & [Astronomer] & PERS & [was born in] & LOC & [,] \\
+lexical & [<PAD>, Astronomer] & PERS & [was born in] & LOC & [, Missouri] \\
+syntaxique & [] & PERS & [$\uparrow_{s}$ was $\downarrow_{pred}$ born $\downarrow_{mod}$ in $\downarrow_{pcomp.n}$ ] & LOC & [] \\
+syntaxique & [Edwin Hubble $\downarrow_{lex.mod}$ ] & PERS & [$\uparrow_{s}$ was $\downarrow_{pred}$ born $\downarrow_{mod}$ in $\downarrow_{pcomp.n}$ ] & LOC & [] \\
+syntaxique & [Astronomer $\downarrow_{lex.mod}$ ] & PERS & [$\uparrow_{s}$ was $\downarrow_{pred}$ born $\downarrow_{mod}$ in $\downarrow_{pcomp.n}$ ] & LOC & [] \\
+syntaxique & [] & PERS & [$\uparrow_{s}$ was $\downarrow_{pred}$ born $\downarrow_{mod}$ in $\downarrow_{pcomp.n}$ ] & LOC & [$\downarrow_{lex.mod}$ ,] \\
+syntaxique & [Edwin Hubble $\downarrow_{lex.mod}$ ] & PERS & [$\uparrow_{s}$ was $\downarrow_{pred}$ born $\downarrow_{mod}$ in $\downarrow_{pcomp.n}$ ] & LOC & [$\downarrow_{lex.mod}$ ,] \\
+syntaxique & [Astronomer $\downarrow_{lex.mod}$ ] & PERS & [$\uparrow_{s}$ was $\downarrow_{pred}$ born $\downarrow_{mod}$ in $\downarrow_{pcomp.n}$ ] & LOC & [$\downarrow_{lex.mod}$ ,] \\
+syntaxique & [] & PERS & [$\uparrow_{s}$ was $\downarrow_{pred}$ born $\downarrow_{mod}$ in $\downarrow_{pcomp.n}$ ] & LOC & [$\downarrow_{inside}$ Missouri] \\
+syntaxique & [Edwin Hubble $\downarrow_{lex.mod}$ ] & PERS & [$\uparrow_{s}$ was $\downarrow_{pred}$ born $\downarrow_{mod}$ in $\downarrow_{pcomp.n}$ ] & LOC & [$\downarrow_{inside}$ Missouri] \\
+syntaxique & [Astronomer $\downarrow_{lex.mod}$ ] & PERS & [$\uparrow_{s}$ was $\downarrow_{pred}$ born $\downarrow_{mod}$ in $\downarrow_{pcomp.n}$ ] & LOC & [$\downarrow_{inside}$ Missouri] \\
+\hline
+\end{tabular}
+\caption{exemples de features utilisées par \citet{mintz2009distant}}
+\label{tab:Mintz-features}
+\end{figure}
+
+\end{document}

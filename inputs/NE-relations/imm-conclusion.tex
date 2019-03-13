@@ -1,0 +1,21 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Dans cette perspective nous avons montré notre participation au défi TAC KBP, plus particulièrement la tâche cold start slot filling. Nous nous sommes concentrés sur notre apport dans cette tâche, ce dernier portant principalement sur la détection de relations entre mentions d'entités nommées dans une phrase donnée. Nous avons pu obtenir un système fonctionnel effectuant un traitement des données textuelles jusqu'à la reconnaissance de relations, mais avons manqué de temps pour approfondir l'état-de-l'art et pour construire un système aux performances suffisantes. Ces travaux étaient préliminaires à l'heure de l'écriture de cette thèse et ont permis d'obtenir une base de travail devant être améliorée.
+
+Nous avons plusieurs pistes d'amélioration pour notre système. Premièrement, nous pensons améliorer la qualité des exemples obtenus par supervision distante. En effet, de nombreux exemples obtenus par une implémentation naïve étaient des faux positifs, rendant impossible l'apprentissage d'un modèle d'extraction de relations correct. Plus précisément le critère \textit{pseudo-relevance feedback} proposé par \citet{xu2013filling} nous a intéressé, ce dernier ayant pour but de réduire le nombre de faux négatifs, ce qui nous permettrait d'obtenir des ensembles d'exemples plus pertinents. Nous pourrons alors étudier plus en détail le reste du système. Nous n'avons pas pu intégrer les dépendances syntaxiques pour TAC KBP, une première amélioration de ce côté serait donc de finaliser leur intégration dans le système. Les traits que nous avons utilisés étaient également assez basiques : en effet, la littérature utilise des conjonctions de différentes observations afin d'obtenir des systèmes plus performants, où nous n'avons utilisé que des observations de façon séparée. Le système utilisé pour la tâche \textit{Slot Filler Validation} utilisait d'autres informations comme des tokens déclencheurs trouvés dans les phrases pour identifier les relations les plus pertinentes à l'échelle des entités. Ces informations sont intéressantes pour identifier les relations entre mentions d'entités à l'échelle de la phrase.
+
+
+\begin{comment}
+\begin{itemize}
+\item Analyse des erreurs à partir des résultats KBP 2016 $\implies$ devrait être faite bientôt, compliqué car pas de vrai gold standard.
+\item Finalisation de l'intégration des résultats de l'analyse syntaxique $\implies$ en cours...
+\item Intégration des relations identifiées par le système de règles ("frère de X", "Maire de Y"...)
+\item Etude de l'impact d'une négation (doivent-elles être filtrées)
+\item Etude du rôle des phrases négatives (toutes les phrases concernant un tuple qui ne vérifie pas la relation r doivent elles être considérées comme négatives?)
+\item Gestion des références pronominales et nominales $\implies$ thèses au Lattice... Collaboration possible ?
+\item Extraction des entités manquantes (religion, partis politiques) et des relations correspondantes $\implies$ par ML ?
+\end{itemize}
+\end{comment}
+
+\end{document}

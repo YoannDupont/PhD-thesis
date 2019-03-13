@@ -1,0 +1,71 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+\begin{comment}
+Voir \url{http://www.nist.gov/tac/2016/KBP/} pour description (tâche "cold start" en particulier). Participation finie...
+\begin{itemize}
+    \item reprendre livrables : Texte/livrables/L2.8 et Texte/livrables/L2.13 (année 3 -- 1 et 2 aussi ?)
+        \begin{itemize}
+            \item modèle prototypique avec pas grand chose
+            \item adaptation de l'analyse en dépendances
+        \end{itemize}
+    \item projets
+        \begin{itemize}
+            \item intégrer analyse en dépendances $\implies$ adaptation d'un corpus annoté en dépendances à une autre schéma d'annotation. Intérêt : pouvoir créer des parseurs en dépendances véritablement adaptés, donc meilleure qualité.
+            \item intégrer REN par machine learning, voir chaptire\ \ref{chap:structured-NER}.
+        \end{itemize}
+\end{itemize}
+\end{comment}
+
+Nous avons évalué le modèle sur deux tâches de la conférence TAC : \emph{Cold Start Slot Filling} (CSSF) et \emph{Slot Filler Validation} (SFV). Ma participation se limitant à la première tâche, la seconde ne sera pas détaillée ici. La tâche de CSSF prenait la forme d'un ensemble de requêtes pour lesquelles il fallait retrouver la ou les cibles (appelés slots) d'une relation dont la source était donnée. Un exemple d'une telle requête est «\ qui est le fondateur de Microsoft ?\ », à laquelle deux réponses sont possibles : Bill Gates et Paul Allen. CSSF se décomposait en deux passes :
+
+\begin{enumerate}
+    \item la première passe, où des requêtes directes sont soumises.  Un exemple d'une telle requête serait «\ qui est le fondateur de Microsoft ?\ ».
+    \item La seconde passe, où des requêtes indirectes sont soumises, en se basant sur les requêtes de la première passe. Un exemple d'une telle requête serait «\ où est né le fondateur de Microsoft ?\ ».
+\end{enumerate}
+
+Si le système a commis une erreur sur la première requête, alors la réponse qu'il donnera à la seconde le sera également. Dans CSSF, la première passe est dite de profondeur 0, tandis que la seconde est dite de profondeur 1, elles sont toutes deux illustrées sur la figure \ref{fig:relation-extraction-example}.
+
+L'ensemble des relations sur lesquelles les systèmes pouvaient être questionnés lors de la tâche CSSF sont disponibles dans le tableau\ \ref{tab:CSSF-relations}. Une autre source de difficulté de CSSF est que les relations ne sont pas nécessairement avec des entités nommées ou même des noms propres : nombre de relations demandaient une réponse dite \emph{nominale}, qui est au minimum un groupe nominal mais n'est pas une entité nommée à proprement parler. C'est par exemple le cas de la relation «\ cause de la mort\ », pour laquelle l'élément textuel à trouver n'est pas une entité nommée, mais un groupe nominal.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+Relation & Inverse(s) \\
+\hline
+per:children & per:parents \\
+per:other\_family & per:other\_family \\
+per:parents & per:children \\
+per:siblings & per:siblings \\
+per:spouse & per:spouse \\
+per:employee\_or\_member\_of & \{org,gpe\}:employees\_or\_members* \\
+per:schools\_attended & org:students* \\
+per:city\_of\_birth & gpe:births\_in\_city* \\
+per:stateorprovince\_of\_birth & gpe:births\_in\_stateorprovince* \\
+per:country\_of\_birth & gpe:births\_in\_country* \\
+per:cities\_of\_residence & gpe:residents\_of\_city* \\
+per:statesorprovinces\_of\_residence & gpe:residents\_of\_stateorprovince \\
+per:countries\_of\_residence & gpe:residents\_of\_country* \\
+per:city\_of\_death & gpe:deaths\_in\_city* \\
+per:stateorprovince\_of\_death & gpe:deaths\_in\_stateorprovince* \\
+per:country\_of\_death & gpe:deaths\_in\_country* \\
+org:shareholders & \{per,org,gpe\}:holds\_shares\_in* \\
+org:founded\_by & \{per,org,gpe\}:organizations\_founded* \\
+org:top\_members\_employees & per:top\_member\_employee\_of* \\
+\{org,gpe\}:member\_of & org:members \\
+org:members & \{org,gpe\}:member\_of \\
+org:parents & \{org,gpe\}:subsidiaries \\
+org:subsidiaries & org:parents \\
+org:city\_of\_headquarters & gpe:headquarters\_in\_city* \\
+org:stateorprovince\_of\_headquarters & gpe:headquarters\_in\_stateorprovince* \\
+org:country\_of\_headquarters & gpe:headquarters\_in\_country* \\
+\hline
+\end{tabular}
+\caption{la liste des relations dans la tâche CSSF.}
+\label{tab:CSSF-relations}
+\end{table}
+
+
+
+\end{document}

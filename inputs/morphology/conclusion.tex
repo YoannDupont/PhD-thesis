@@ -1,0 +1,8 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Extraire la morphologie des tokens par éléments répétés, ça fonctionne mais pas autant qu'on pourrait l'espérer. Extraire un peu tout à la façon "CRF convolutionel" donne de meilleurs résultats sur tous les tableaux (à part la consommation mémoire, mais pas des masses). Ceci est la preuve, une fois de plus, qu'un algorithme de ML sait se débrouiller avec pas mal de traits "pas trop faux" et qu'il vaut mieux lui laisser faire la sélection lui-même car il le fait mieux qu'un être humain. Cependant, on remarque que les méthodes de recherche de traits pertinents permettent d'avoir une meilleure précision, mais n'améliorent pas nécessairement le rappel, on peut donc voir cette méthode soit comme un premier pas pour faciliter l'effort humain à utiliser des traits spécifiques ou pour l'adaptation de lexiques déjà existants. Là où on peut gagner est dans la classification des traits : si on est capable de catégoriser les traits, intégrer cette classification dans le ML donne un gain supplémentaire.
+
+L'utilisation de répertoires permet d'obtenir des gains très intéressants, autant au niveau de la qualité que sur les poids des modèles, la vitesse d'apprentissage et d'annotation. Il ne faut pas avoir peur d'utiliser de gros dictionnaires, le CRF sait manifestement bien les gérer. L'utilisation de l'ambiguïté n'est pas recommandée, le CRF ne sait pas les gérer correctement, il est préférable d'effectuer la désambiguisation "à la main", soit donner un ordre de priorité. Cette étape est particulièrement importante car elle peut faire varier les résultats très fortement.
+
+\end{document}

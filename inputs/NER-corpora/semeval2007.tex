@@ -1,0 +1,50 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+La tâche 9 de SEM'Eval 2007 \citep{marquezSemEval2007} contient un corpus multilingue d'Espagnol et de Catalan dont un exemple de phrase complètement annotée est donnée dans la figure\ \ref{fig:semeval2007-example}. Ils ont été annotés selon trois niveaux, chacun constituant une sous-tâche :
+\begin{itemize}
+    \item \textbf{Noun Sense Disambiguation} (NSD) : disambiguisation de tous les noms (communs et propres) fréquents
+    \item \textbf{Named Entity Recognition} (NER) : la reconnaissance d'entités nommées avec ou sans imbrications.
+    \item \textbf{Semantic Role Labeling} (SRL) : contient elle-même deux sous-tâches ; l'annotation des rôles sémantiques des prédicats verbaux (SR) et l'étiquetage des verbes selon leur classe sémantique (SC).
+\end{itemize}
+
+La sous-tâche nous intéressant ici étant la NER. Le corpus semeval'2007 considère deux types d'entités : les \emph{entités fortes} et les \emph{entités faibles}. Les \emph{entités fortes} sont les feuilles d'un arbre d'analyse en entités nommées, elles s'étendent sur un unique token dans le corpus (ce token pouvant être une entité multitokens). Les \emph{entités faibles} sont toutes les autres entités, qui recouvrent soit une \emph{entité forte} soit une autre \emph{entité faible}. Comme il est possible de le voir dans la figure\ \ref{fig:semeval2007-example}, les \emph{entités faibles} peuvent être très longues, incluant notamment les cas suivants :
+\begin{itemize}
+    \item propositions coordonnées (voir figure\ \ref{fig:semeval2007-example})
+    \item déterminant défini ("el Banco\_Central" comprend l'entité forte "Banco\_Central" et l'entité faible "el Banco\_Central")
+\end{itemize}
+
+Un grand inconvénient ici est l'absence d'accord inter-annotateur pour la tâche d'entités nommées spécifiquement, bien qu'il existe pour l'analyse syntaxique \citep{civit2003qualitative} et sémantique \citep{marquez2004quality}. Un autre étant la définition même des \emph{entités faibles}, qui se base plus sur l'analyse syntaxique que sur une véritable définition des entités nommées. Cela est parfaitement illustré dans la figure\ \ref{fig:semeval2007-example}, où "Zapatero" est annoté, ainsi que "la comision Zapatero, que ampliara el plazo de trabajo," (la virgule étant incluse), mais pas "la comision Zapatero", qui nous aurait intéressé ici.
+
+\begin{figure}[ht!]
+\center
+\scriptsize
+\begin{verbatim}
+INPUT------------------------------------------------------> OUTPUT------------------------------------->
+BASIC_INPUT_INFO-> EXTRA_INPUT_INFO------------------------> NE---> NS------> SR------------------------>
+WORD         TN TV LEMMA       POS     SYNTAX                NE     NS        SC  PROPS----------------->
+---------------------------------------------------------------------------------------------------------
+Las          -  -  el          da0fp0   (S(sn-SUJ(espec.fp*)     *  -         -            *  (Arg1-TEM*
+conclusiones *  -  conclusion  ncfp000        (grup.nom.fp*      *  05059980n -            *           *
+de           -  -  de          sps00              (sp(prep*)     *  -         -            *           *
+la           -  -  el          da0fs0         (sn(espec.fs*) (ORG*  -         -            *           *
+comision     *  -  comision    ncfs000        (grup.nom.fs*      *  06172564n -            *           *
+Zapatero     -  -  Zapatero    np00000           (grup.nom*) (PER*) -         -            *           *
+,            -  -  ,           Fc                   (S.F.R*      *  -         -            *           *
+que          -  -  que         pr0cn00        (relatiu-SUJ*)     *  -         -   (Arg0-CAU*)          *
+ampliara     -  *  ampliar     vmif3s0                 (gv*)     *  -         a1         (V*)          *
+el           -  -  el          da0ms0      (sn-CD(espec.ms*)     *  -         -   (Arg1-PAT*           *
+plazo        *  -  plazo       ncms000        (grup.nom.ms*      *  10935385n -            *           *
+de           -  -  de          sps00              (sp(prep*)     *  -         -            *           *
+trabajo      *  -  trabajo     ncms000 (sn(grup.nom.ms*)))))     *  00377835n -            *)          *
+,            -  -  ,           Fc                    *))))))     *) -         -            *           *)
+quedan       -  *  quedar      vmip3p0                 (gv*)     *  -         b3           *         (V*)
+para         -  -  para        sps00           (sp-CC(prep*)     *  -         -            *  (ArgM-TMP*
+despues_del  -  -  despues_del spcms              (sp(prep*)     *  -         -            *           *
+verano       *  -  verano      ncms000  (sn(grup.nom.ms*))))     *  10946199n -            *           *)
+.            -  -  .           Fp                         *)     *  -         -            *           *\end{verbatim}
+\caption{exemple de phrase annotée dans SEM'Eval 2007 tâche 9}
+\label{fig:semeval2007-example}
+\end{figure}
+
+\end{document}

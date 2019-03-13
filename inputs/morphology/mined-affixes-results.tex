@@ -1,0 +1,97 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Les résultats que nous présentons ici ont été obtenus sur le corpus CHEMDNER en utilisant les affixes que nous avons automatiquement générés à l'aide du processus décrit dans les sections\ \ref{subsec:morphology-extraction-algorithm} et\ \ref{subsec:morphology-tree-ordering}. Nous les comparerons à des résultats obtenus avec l'utilisation de simples préfixes et suffixes. Les tableaux \ref{tab:feature-sets} montrent les jeux de features utilisés dans cette expérience. La baseline utilise des préfixes et suffixes de taille 1 à 5. Les expériences comparatives que nous avons faites utilisent les préfixes et suffixes que nous avons automatiquement extraits. Pour ces expériences, nous avons utilisé uniquement le plus long préfixe et le plus long suffixe que nous avons reconnu. L'intuition est que ces préfixes et suffixes plus longs sont plus discriminants, il est également improbable qu'ils soient silencieux car ils font partie d'une liste plutôt réduite construite automatiquement depuis le corpus. Pour l'entrée «\ infixes\ », nous avons utilisé un ensemble de 5 infixes triés selon la structure illustrée dans la figure \ref{fig:hierarchy}. «\ /substitution\ » signifie que, pour chaque ensemble de substitutions différentes telles que décrites dans le tableau \ref{tab:subs}, le trait est répété. Cela signifie que pour le trait «\ préfixe/substitution\ » il y a en tout deux préfixes : un pour lequel les majuscules ont été transformées en minuscules et les nombres substitués par «\ 0\ », ainsi qu'un où seuls les nombres on été substitués. Bien que les affixes soient générés entité par entité, il n'est pas utile de donner un jeu de traits pour chacune d'entre elles, un CRF établissant lui-même les correspondances trait/entité.
+
+Les affixes servant à caractériser les entités, il est important de distinguer l'évaluation des entités connues et celle des entités inconnues. En effet, un CRF reconnaît très bien des entités qu'il a déjà vues mais a plus de problèmes pour les entités qu'il doit deviner. De plus, les corpus biomédicaux contiennent une grande proportion d'entités inconnues : CHEMDNER a par exemple 39,5\% d'entités inconnues sur son ensemble de test comme dit dans la section \ref{subsec:corpus-CHEMDNER}.
+
+\begin{table}[ht!]
+\begin{minipage}{0.45\linewidth}
+\hfill
+\begin{tabular}{|c|c|}
+\hline
+feature      & fenêtre \\
+\hline
+token        & [-1,1] \\
+préfixe[1,5] & [-1,1] \\
+suffixe[1,5] & [-1,1] \\
+\hline
+\end{tabular}
+\end{minipage}
+\begin{minipage}{0.9\linewidth}
+\end{minipage}
+\begin{minipage}{0.45\linewidth}
+\begin{tabular}{|c|c|}
+\hline
+feature              & fenêtre \\
+\hline
+token                & [-1,1] \\
+préfixe/substitution & [-1,1] \\
+suffixe/substitution & [-1,1] \\
+infixes/substitution & [-1,1] \\
+\hline
+\end{tabular}
+\end{minipage}
+\caption{À gauche : la baseline. À droite : les traits utilisés}
+\label{tab:feature-sets}
+\end{table}
+
+Les résultats que nous avons obtenus en termes de f-mesure sont donnés dans le tableau \ref{tab:fscores}. Notre baseline est légèrement au-dessus de 80, ce qui aurait valu la dixième place (sur vingt-sept) dans le défi CHEMDNER 2013. En considérant que les traits sont simplement des préfixes et suffixes, ce score peut d'ores et déjà être considéré comme assez bon.
+
+Nous remarquons que sans sélection basée sur le score, les résultats que nous obtenons améliorent la baseline. Ce qui indique bien que ces nouvelles informations peuvent être utilisées pour améliorer les performances. Un résultat plus étonnant est la différence de qualité entre la sélection sur la base de la couverture et celle sur la base de la précision. Nous remarquons que la sélection par précision entraîne une chute des scores, principalement sur les entités inconnues, pour lesquelles le rappel a subi une perte de 13 points. À l'inverse, la différence entre l'absence de sélection et la sélection est à peine significative sur le résultat global, mais elle le devient en faisant la comparaison entre les entités connues et inconnues. Cela montre bien qu'une sélection influence beaucoup les résultats et que le choix des heuristiques utilisées est capital.
+
+De manière générale, nous remarquons qu'une sélection sur la base de la couverture est meilleure que sur la base de la précision, en témoigne l'amélioration des résultats sur l'expérience (d) par rapport à l'expérience (b), où une sélection plus importante des affixes a permis d'améliorer une sélection plus particulière.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|l|ccc|}
+\cline{2-4}
+\multicolumn{1}{l|}{}   & connues        & inconnues      & global \\
+\hline
+baseline                & 93.72          & 56.30          & 80.05 \\
+\hline
+(a) tout                & \textbf{95.28} & 54.36          & 80.82 \\
+\hline
+(b) prc>=25             & 93.97          & 45.34          & 77.28 \\
+(c) couv>=0.1           & 94.98          & 55.04          & 80.81 \\
+(d) couv>=0.1 + prc>=25 & 93.87          & 47.93          & 77.91 \\
+\hline
+(e) baseline + (a)          & 95.10          & \textbf{56.65} & \textbf{81.54} \\
+\hline
+\end{tabular}
+\caption{f-mesures des expériences menées}
+\label{tab:fscores}
+\end{table}
+
+Malgré les différentes présélections, nous n'avons pas obtenu de meilleurs résultats par rapport à l'ajout de l'intégralité des traits, malgré quelques différences de comportement quant aux entités inconnues. Plus important, les améliorations que nous observons se font surtout sur les entités connues. Le tableau \ref{tab:entity-fscores} propose une vue par entité permettant d'établir avec plus de précision où sont les gains et les pertes.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|l|cc|cc|cc|}
+\cline{2-7}
+\multicolumn{1}{l|}{}   & \multicolumn{2}{|c|}{connues} & \multicolumn{2}{|c|}{inconnues} & \multicolumn{2}{|c|}{global} \\
+\multicolumn{1}{l|}{}   & baseline & (e)                & baseline & (e)                  & baseline & (e) \\
+\hline
+ABBREVIATION            & 91.35    & +1.21              & 36.08    & -5.57                & 70.34    & +0.28 \\
+FAMILY                  & 89.03    & +1.55              & 47.76    & +2.36                & 73.68    & +2.47 \\
+FORMULA                 & 95.01    & +0.17              & 61.10    & +1.79                & 86.37    & +0.75 \\
+IDENTIFIER              & 77.63    & +8.45              & 35.60    & -7.21                & 48.40    & -0.73 \\
+MULTIPLE                & 33.33    & +6.67              & 32.75    & +2.54                & 32.76    & +2.62 \\
+NO\_CLASS               & 100.00   & +0.00              & 00.00    & +0.00                & 13.63    & +0.00 \\
+SYSTEMATIC              & 94.75    & +2.16              & 66.79    & +3.76                & 82.74    & +2.94 \\
+TRIVIAL                 & 95.82    & +1.32              & 63.56    & -1.91                & 85.29    & +0.81 \\
+\hline
+\end{tabular}
+\caption{f-mesures pour chaque entité}
+\label{tab:entity-fscores}
+\end{table}
+
+Nous remarquons que la plus grosse perte sur les entités inconnues se fait sur IDENTIFIER (-7.75), suivi par ABBREVIATION (-5.57). Ces résultats ne sont pas en eux-mêmes étonnants : l'algorithme n'est pas adapté à leur extraction, comme illustré par les résultats. Une meilleure approche pour les abbreviations serait de reconnaître de manière à part ces dernières avec des algorithmes de mise en correspondance comme développé par\ \citet{hearst2003simple}. En ce qui concerne les identifiants, ils respectent majoritairement des patrons assez simples, comme un ensemble de majuscules suivie d'une ponctuation et d'une suite de chiffres. Notre algorithme ne sera capable que d'extraire la suite de lettres en tant que préfixe. Cela explique le fort gain sur les identifiants connus, leur partie la plus pertinente étant bien reconnue par notre algorithme, mais aussi la forte dégradation sur les inconnus, où notre algorithme ne sera pas capable de retrouver l'information en cas d'identifiant de nature différente (ex: identifiant MEDLINE contre identifiant ChEBI). Nous remarquons une perte assez importante sur les entités inconnues de type TRIVIAL (-1.91).
+
+L'entité ayant eu la meilleure amélioration globale est SYSTEMATIC (+2.94), d'abord sur les entités inconnues (+3.76) puis sur les connues (+2.16).
+
+Ces résultats montrent assez clairement une amélioration globale du modèle, mis à part sur certaines entités. Ils illustrent aussi les limites de notre algorithme, cette limite venant du fait que ces entités se reconnaissent de manières différentes. Les abbréviations se reconnaissent plus simplement par des méthodes algorithmiques : une fois les entités trouvées dans le document, il faut rechercher les potentielles abbréviations leur correspondant dans ce même document, une même abbréviation pouvant correspondre à deux entités de natures différentes d'un document à l'autre (et donc ne devant pas être reconnue).
+
+Afin d'affiner l'analyse de notre modèle, nous allons à présent nous concentrer sur les erreurs faites par ce dernier.
+
+\end{document}

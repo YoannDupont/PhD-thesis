@@ -1,0 +1,31 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Les résultats que nous avons obtenus dans le cadre de CSSF ne sont pas très satisfaisants. Pour les requêtes de profondeur 0 (les questions directes), la f-mesure était de 1.09, le système n'a pas pu donner de réponse pour les requêtes de profondeur 1, donnant une f-mesure globale de 0.73. Il est assez difficile de comprendre les sources exactes de ces erreurs, c'est-à-dire lesquelles imputer à des erreurs de reconnaissance d'entités nommées ou des erreurs de classification de multir, KBP n'ayant pas donné de gold standard. Une première piste cependant peut être explorée : tous les participants ont reçu les résultats du LDC, qui est en fait un groupe d'annotateurs humains ayant rempli la tâche manuellement dans les mêmes délais que les équipes participantes. Nous pouvons utiliser les exemples évalués de cette équipe afin de quantifier au mieux les erreurs selon le schéma suivant :
+\begin{itemize}
+    \item les entités ont-elles été retrouvées par le système de REN ?
+    \item si tel est le cas, ont-elles été correctement typées ?
+    \item quelle est la réponse de multir ?
+    \item si multir n'a pas donné de réponse (annotation $none$), comment évaluer humainement la relation ?
+\end{itemize}
+
+% \begin{table}[ht!]
+% \centering
+% \begin{tabular}{|l|l|ccc|}
+% \hline
+% système & profondeur & précision & rappel & F-mesure \\
+% \hline
+% SystemX & 0          & 1.46     & 0.86    & 1.09 \\
+% \hline
+% SystemX & 1          & 0        & 0       & 0 \\
+% \hline
+% SystemX & tout       & 1.03     & 0.56    & 0.73 \\
+% \hline
+% \end{tabular}
+% \caption{les scores obtenus sur le meilleurs run de CSSF}
+% \label{tab:CSSF-scores}
+% \end{table}
+
+Nous avons voulu évaluer les causes de ces résultats modestes. La majorité de ces résultats peuvent s'expliquer par le manque de maturité de la chaine de traitements. Les exemples récupérés selon la procédure d'apprentissage distant étaient principalement des faux positifs, c'est-à-dire que l'algorithme apprenait sur des données bruitées. Nous avons voulu étudier l'impact de la qualité de l'extraction des entités nommées, mais au vu des faibles résultats, cette évaluation n'aurait pas pu apporter d'éléments de réponse pertinents.
+
+\end{document}

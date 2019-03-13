@@ -1,0 +1,107 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Là où les HMM sont des modèles dits génératifs \citep{gaussier2011modeles} car ils modélisent une loi de probabilité jointe de la sortie $y$ et de l'entrée $x$, notée $p(x,y)$, les CRF sont des modèles dits discriminants car ils modélisent la probabilité conditionnelle de la sortie par rapport à l'entrée, notée $p(y|x)$. Les CRF linéaires sont l'équivalent discriminant des HMM. La définition des CRF pour les graphes généraux est :
+
+\begin{equation}\label{eq:general-CRF}
+p_\theta(y|x) = \frac{1}{Z_\theta(x)} \prod_{c \in \mathcal{C}} exp \left(\sum_{k} \theta_{k} f_{k}(y_{c}, x) \right)
+\end{equation}
+
+Où $Z_\theta(x)$ est un facteur de normalisation, $\mathcal{C}$ est l'ensemble des cliques d'un graphe, $y_{c}$ est la valeur de $y$ sur la clique $c$. Les K features (ou traits) $f_{k}$ sont des fonctions fournies par l'utilisateur. Une feature $f_{k}$ est une fonction caractéristique, on dit qu'elle est vérifiée (i.e. sa valeur est 1) si, à la position courante t, une configuration entre $x$ et $y_{c}$ est observée (elle vaut 0 sinon). À chaque feature $f_{k}$ est associé un poids $\theta_{k}$. Ces poids constituent les paramètres du modèle devant être estimés au cours de l'apprentissage.
+
+Lorsque le graphe exprimant les dépendances entre étiquettes est linéaire, les cliques du graphes sont les n\oe uds isolés et les couples de n\oe uds successifs. La distribution de probabilité d'une séquence d'annotations $y$ selon une séquence observable $x$ est alors définie par :
+
+\begin{equation}\label{eq:linear-CRF}
+p_\theta(y|x) = \frac{1}{Z_\theta(x)} \prod_{t} exp \left(\sum^{K}_{k=1} \theta_{k} f_{k}(t, y_{t}, y_{t-1}, x) \right)
+\end{equation}
+
+Avec :
+
+\begin{equation}\label{eq:CRF-normalization}
+Z_\theta(x) = \sum_{y} \prod^{T}_{t=1} exp \left(\sum^{K}_{k=1} \theta_{k} f_{k}(t, y_{t}, y_{t-1}, x) \right)
+\end{equation}
+
+L'implémentation la plus efficace à l'heure actuelle des CRF linéaires est fournie par Wapiti\footnote{disponible depuis: \url{https://github.com/Jekub/Wapiti}} \cite{lavergne10}, qui implémente la plupart des algorithmes d'entrainement couramment utilisés en plus de permettre la sélection des features pertinentes% via des pénalisations $\ell^{1}$ et $\ell^{2}$
+.
+
+Les CRF se sont montrés efficaces sur de nombreuses tâches d'annotation, notamment l'étiquetage en parties du discours \citep{constant2011integrer}, la reconnaissance d'entités nommées \citep{McCallumLi03,dupont2014reconnaisseur, raymond2013robust}, le chunking \citep{Sha03} et même l'analyse syntaxique profonde \citep{finkel2008efficient,Tsuruoka09}. Leur principal inconvénient est qu'ils apparaissent comme des "boîtes noires". Un modèle issu d'un apprentissage par CRF est simplement une liste de features pondérées pouvant avoir plusieurs millions d'éléments, ce qui le rend difficile à interpréter.
+
+Un exemple d'entrée pour un CRF est donné dans le tableau \ref{tab:CRF-input-example}, des exemples de fonctions feature sont données dans la figure \ref{tab:CRF-feature-function-example}.
+
+\begin{table}[ht!]
+\begin{tabular}{|l|l|}
+\hline
+Y              & X \\
+\hline
+B-Personne     & Yoann, nom propre, commenceParMajuscule, enDébutDePhrase \\
+I-Personne     & Dupont, nom propre, commenceParMajuscule, PasEnDébutDePhrase \\
+O              & fait, verbe \\
+O              & une, déterminant \\
+O              & thèse, nom commun \\
+O              & à, préposition \\
+B-Organisation & Paris, nom propre, commenceParMajuscule, PasEnDébutDePhrase \\
+I-Organisation & 3, nombre \\
+O              & ., ponctuation \\
+\hline
+\end{tabular}
+\caption{exemple d'entrée pour un CRF}
+\label{tab:CRF-input-example}
+\end{table}
+
+\begin{table}[ht!]
+\begin{tabular}{ll}
+f1 := & \textbf{si} (sortie = \{B-Personne,I-Personne\} et token=Dupont) \textbf{renvoyer} 1 \\
+      & \textbf{sinon renvoyer} 0 \\
+f2 := & \textbf{si} (sortie = \{B-Personne,I-Personne\} et token\_précédente=Yoann) \textbf{renvoyer} 1 \\
+      & \textbf{sinon renvoyer} 0 \\
+f3 := & \textbf{si} (sortie = \{B-Personne,I-Personne\} et commenceParMajuscule) \textbf{renvoyer} 1 \\
+      & \textbf{sinon renvoyer} 0 \\
+\end{tabular}
+\caption{exemple de fonctions features pour le token "Dupont" de l'exemple \ref{tab:CRF-input-example}.}
+\label{tab:CRF-feature-function-example}
+\end{table}
+
+Par soucis d'utilisabilité, les programmes implémentant des CRF recourrent souvent à un format tabulaire. Chaque token est alors représenté sur une ligne, un ensemble de colonnes représente alors un ensemble d'informations relatives au token courant. Ces informations sont appelées les \emph{descripteurs} du token. Une représentation tabulaire de la phrase du tableau \ref{tab:CRF-input-example} est donné dans le tableau \ref{tab:CRF-input-tabular}. Ces représentations ont l'avantage, en plus d'économiser du volume de données, de permettre simplement l'ajout de ressources externes sous formes de lexiques. Une colone pour un lexique consisterait juste en "oui/non", en fonction de si le token appartient au lexique ou non.
+
+\begin{table}[ht!]
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+Y              & \multicolumn{4}{c|}{X} \\
+\hline
+               & texte & catégorie & commenceMajuscule? & débutDePhrase? \\
+\cline{2-5}
+B-Personne     & Yoann & nom propre & oui & oui \\
+I-Personne     & Dupont & nom propre & oui & non \\
+O              & fait & verbe & non & non \\
+O              & une & déterminant & non & non \\
+O              & thèse & nom commun & non & non \\
+O              & à & préposition & non & non \\
+B-Organisation & Paris & nom propre & oui & non \\
+I-Organisation & 3 & nombre & non & non \\
+O              & . & ponctuation & non & non \\
+\hline
+\end{tabular}
+\caption{exemple d'entrée pour un CRF sous format tabulaire}
+\label{tab:CRF-input-tabular}
+\end{table}
+
+Lorsque des représentations tabulaires des données sont utilisées, les programment implémentant les CRF ont recourt à des \emph{patrons} (ou \emph{template}). Ces patrons permettent de générer les différentes features en étant appliqués à l'ensembles des tokens du texte, comme indiqué dans le tableau \ref{tab:crf-template}. Une feature se génére alors en associant un patron instancié aux étiquettes présentes à l'instant courant. L'utilisation d'une représentaion tabulaire et de patrons permet en général une réduction du volume de données textuelles et offre une grande puissance de combinaison des différentes features.
+
+\begin{table}[ht!]
+\centering
+\small
+\begin{tabular}{|l|l|l|}
+\hline
+patron & instance & étiquette\\
+\hline
+token$_{0}$=\textbf{\%x[0,0]} & token$_{0}$=\textbf{Yoann} & B-Personne \\
+catégorie$_{0}$=\textbf{\%x[0,1]} & catégorie$_{0}$=\textbf{nom propre} & B-Personne \\
+token$_{0/1}$=\textbf{\%x[0,0]/\%x[1,0]} & token$_{0/1}$=\textbf{Yoann/Dupont} & B-Personne \\
+token$_{0}$/catégorie$_{0}$=\textbf{\%x[0,0]/\%x[0,1]} & token$_{0}$/catégorie$_{0}$=\textbf{Yoann/nom propre} & B-Personne \\
+\hline
+\end{tabular}
+\caption{exemple de template pour un CRF sous format tabulaire. Nous considérons que nous sommes sur le premier token de l'exemple donné dans le tableau \ref{tab:CRF-input-tabular}.}
+\label{tab:crf-template}
+\end{table}
+
+\end{document}

@@ -1,0 +1,64 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Dans le cadre de cette expérience, nous comparons quatre systèmes, deux à base de règles et deux à base d'apprentissage automatique. Pour les systèmes à base de règles nous avons testé la TM360 et ESSEX, ces derniers ayant quelques différences de définition et périmètre quant aux entités nommées. La plus importante étant que ces deux systèmes ne font pas la distinction entre organisation et entreprises, qui nous a conduits à fusionner ces deux types dans le corpus pour effectuer ce comparatif. Nous les comparerons avec SEM \citep{dupont2014reconnaisseur} ainsi qu'un Bi-LSTM-CRF. SEM utilise des dictionnaires issus de Wikipedia ainsi que des listes de tokens déclencheurs pour les entités principales. Ces dictionnaires ont servi à générer des traits semblables à ceux proposés par \citet{raymond2010reconnaissance}. Ces traits sont générés en deux étapes : 1. les dictionnaires sont appliqués 2. si le token n'est reconnu par aucun dictionnaire, son POS est utilisé. Nous avons également utilisé ce trait en complément des tokens dans le Bi-LSTM-CRF. Ces traits sont discutés en détail dans le chapitre \ref{chap:morphology}.
+
+Les types renvoyés par les différents outils ne correspondent pas totalement aux types attendus par le FTB. Par exemple, pour la TM360, les indices boursiers sont annotés en tant que Company, alors que ces derniers ne le sont pas dans le FTB. Elle donne également des types hiérarchisés de lieux, le type racine \emph{/Entity/Location} de la TM360 correspond globalement au type \emph{Location} du FTB. ESSEX a un type \emph{places}, qui correspond majoritairement au type \emph{Location} du FTB, mais est plus couvrant : en effet, ce dernier retrouve également des entités géologiques comme des rivières ou des montagnes. Le type \emph{people} fourni par ESSEX correspond au type \emph{Person} du FTB.
+
+Pour fournir des évaluations dans le même cadre, nous avons utilisé un outil de Luxid afin d'effectuer les mesures de qualité : l'Annotation Workbench (AWB). Cet outil permet de fournir des chiffres de précision, rappel et f-mesure selon deux variantes : une stricte (communément utilisée dans les articles) et une tolérante (qui ignore les erreurs de frontières). Le tableau \ref{tab:FTB6-TM-ESSEX-CRF-LSTM-strict} montre les résultats en termes de qualité stricte, tandis que le tableau \ref{tab:FTB6-TM-ESSEX-CRF-LSTM-tolerant} donne les résultats obtenus avec les mesures tolérantes.
+
+\begin{table}[ht!]
+\centering
+\scriptsize
+\begin{tabular}{|c|cccc|cccc|cccc|}
+\hline
+entité    & \multicolumn{4}{c|}{location}           & \multicolumn{4}{c|}{organization}                   & \multicolumn{4}{c|}{person} \\
+système   & TM360 & ESSEX & SEM              & NN   & TM360 & ESSEX & SEM              & NN               & TM360 & ESSEX           & SEM & NN\\
+\hline
+précision & 69.1  & 85.5  & \underline{93.9} & 93.8 & 79.3  & 85.7  & \underline{89.1} & 87.9             & 19.5 & \underline{88.3} & 88.2 & 87 \\
+rappel    & 79.7  & 86.7  & \underline{90.7} & 90.1 & 43.6  & 46.5  & 79.6             & \underline{82.4} & 19.6 & \underline{91.3} & 90.3 & \underline{91.3} \\
+f-mesure  & 74    & 86.1  & \underline{92.2} & 91.9 & 56.3  & 60.3  & 84.1             & \underline{85.0} & 19.6 & \underline{89.7} & 89.2 & 89.1 \\
+\hline
+\end{tabular}
+\caption{les chiffres de qualité stricte des différents systèmes sur le corpus de test du FTB.}
+\label{tab:FTB6-TM-ESSEX-CRF-LSTM-strict}
+\end{table}
+
+\begin{table}[ht!]
+\centering
+\scriptsize
+\begin{tabular}{|c|cccc|cccc|cccc|}
+\hline
+entité    & \multicolumn{4}{c|}{location}                        & \multicolumn{4}{c|}{organization}                   & \multicolumn{4}{c|}{person} \\
+système   & TM360 &  ESSEX & SEM              & NN               & TM360 & ESSEX & SEM              & NN               & TM360 & ESSEX & SEM              & NN \\
+\hline
+précision & 71.1  & 90.2   & 95               & \underline{95.3} & 86.5  & 90.3  & \underline{92.3} & 91.9             & 89.8 & 90.6   & \underline{91.9} & 89.4 \\
+rappel    & 81.9  & 91.5   & \underline{91.8} & 91.5             & 47.5  & 49    & 82.4             & \underline{86.2} & 90.2 & 93.7   & \underline{94.2} & 93.7 \\
+f-mesure  & 76.1  & 90.9   & 93.3             & \underline{93.4} & 61.4  & 63.5  & 87.1             & \underline{89}   & 90   & 92.1   & \underline{93.4} & 91.5 \\
+\hline
+\end{tabular}
+\caption{les chiffres de qualité tolérante des différents systèmes sur le corpus de test du FTB.}
+\label{tab:FTB6-TM-ESSEX-CRF-LSTM-tolerant}
+\end{table}
+
+Comme le montrent les tableaux \ref{tab:FTB6-TM-ESSEX-CRF-LSTM-strict} et \ref{tab:FTB6-TM-ESSEX-CRF-LSTM-tolerant}, les systèmes à base d'apprentissage ont globalement la meilleure qualité sur le FTB, à l'exception des personnes pour lesquelles ESSEX est le meilleur en qualité stricte. Nous remarquons en comparant les qualités strictes et tolérantes pour la TM360 sur les personnes que la faible qualité en évaluation stricte est surtout due à des erreurs de frontières que l'on peut attribuer aux titres de civilité, non annotés dans le FTB.
+
+Le Bi-LSTM-CRF a globalement la meilleure qualité, suivi du CRF, qui est le meilleur système sur les lieux. D'un point de vue général, le réseau de neurones est le meilleur système sur les entités inconnues, comme indiqué sur la tableau \ref{tab:intro-CRF-vs-LSTM}. Ces résultats vont dans le sens des résultats décrits par \citet{augenstein2017generalisation}, qui ont mené des tests de comparaison extensifs sur les CRF et les réseaux de neurones. Comme nous le verrons dans l'analyse des erreurs, cette amélioration du rappel est sans doute due à une meilleure utilisation du contexte que le CRF, ce qui cause également un peu plus de bruit, expliquant en partie la plus faible précision.
+
+\begin{table}[ht!]
+\centering
+\small
+\begin{tabular}{|l|ccc|ccc|ccc|}
+\hline
+\multirow{2}{*}{système} & \multicolumn{3}{|c|}{connues} & \multicolumn{3}{|c|}{inconnues} & \multicolumn{3}{|c|}{global}\\
+                         & P     & R     & F     & P     & R     & F     & P     & R     & F   \\
+\hline
+SEM                      & \underline{96.83} & \underline{95.46} & \underline{96.14} & 72.46             & 62.53             & 67.13             & \underline{87.89} & 82.34             & 85.02 \\
+LSTM-CRF                 & 95.98             & 94.89             & 95.44             & \underline{73.09} & \underline{67.45} & \underline{70.16} & 87.23             & \underline{83.96} & \underline{85.57} \\
+\hline
+\end{tabular}
+\caption{comparaison entre CRF et LSTM-CRF sur les entités connues et inconnues de FTB.}
+\label{tab:intro-CRF-vs-LSTM}
+\end{table}
+
+\end{document}

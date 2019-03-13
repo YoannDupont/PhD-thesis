@@ -1,0 +1,19 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+\begin{comment}
+Dans la continuité de l'article EGC \citep{dupont2016extraction} :
+\begin{itemize}
+    \item sous-séquences deviennent des chaînes de tokens $\implies$ extraction de triggers
+    \item attribution de score
+    \item générer des dictionnaires et créer des taxonomies
+    \item gestion de l'ambiguïté (même chose reconnue par plusieurs dictionnaires)
+    \item comparer avec fouille de motifs \citep{holat2016fouille,cellier2010fouille}. Intégration de "règles" dans un CRF.
+    \item cas des adresses (en cours)
+    \item intégrer dans Quaero (features à la \citet{raymond2013robust})
+\end{itemize}
+\end{comment}
+
+Dans cette section, nous nous concentrerons sur l'extration de tokens déclencheurs et son intégration dans un système par apprentissage automatique. Notre algorithme \ref{alg:extractAffixes} est capable de repérer les affixes pertinents, autant au niveau des tokens que des séquences de tokens. Il peut alors être utilisé comme un moyen de créer des premiers lexiques ou d'enrichir des lexiques déjà existant. Dans cette section, nous l'utiliserons sur des séquences de tokens afin de trouver des tokens déclencheurs, dans le cadre des addresses et de la reconnaissance d'entités nommées sur le French Treebank.
+
+\end{document}

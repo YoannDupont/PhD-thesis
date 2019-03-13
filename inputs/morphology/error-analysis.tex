@@ -1,0 +1,39 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Nous avons classé les erreurs selon 5 types différents : les erreurs de type (T), de frontière (F), de type et frontière (TF), le bruit (B) et le silence (S). Nous considérons les quatre premiers types d'erreurs comme étant des erreurs de précision (P), ce qui signifie qu'une entité renvoyée par le système ne peut s'aligner qu'avec une seule entité de l'annotation de référence et que $P\ +\ T\ +\ F\ +\ TF\ +\ B\ =\ 100$. Les erreurs de silence sont les entités de l'annotation de référence qui n'ont pu être alignées avec une proposition du CRF. Une comparaison des scores est donnée dans le tableau \ref{tab:error-comparison}. Les deux derniers sont particulièrement intéressants, le bruit pouvant être une entité manquée par les annotateurs et le silence donnant plus d'informations sur les entités difficiles à identifier. En effet, les entités bruitées (les désaccords entre les systèmes et la référence de manière générale) pourraient servir de base pour une passe d'adjudication d'un corpus.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|l|cc|cc|}
+\cline{2-5}
+\multicolumn{1}{l|}{} & \multicolumn{2}{|c|}{connues} & \multicolumn{2}{|c|}{inconnues}    \\
+\multicolumn{1}{l|}{} & baseline & (e)                & baseline  & (e)   \\
+\hline
+précis                & 96.36    & 97.05              & 67.36    & 72.9 \\
+\hline
+type                  &  1.25    & 0.4                & 13.54    & 11.22 \\
+frontière             &  0.45    & 0.4                & 5.57     & 6.41 \\
+type+frontière        &  0.17    & 0.08               & 3.73     & 3.88 \\
+bruit                 &  1.76    & 2.06               & 9.80     & 5.6 \\
+\hline
+silence               &  7.00    & -1.10              & 35.25    & 40 \\
+\hline
+\end{tabular}
+\caption{comparaison des erreurs}
+\label{tab:error-comparison}
+\end{table}
+
+Beaucoup d'erreurs sur les abbréviations sont dues à des entités ayant la même forme que des abbréviations connues, mais qui correspondent à une autre entité. Par exemple, «\ NAC\ » dans le corpus d'entrainement signifie généralement «\ N-Acetyl-l-cysteine\ » alors que dans certains documents du corpus de test, cela représente «\ nucleus accumbens\ », qui n'est pas une entité biochimique, donc hors de la définition de CEM.
+
+Les erreurs de silence sont assez importantes (19\% des entités de l'annotation de référence ne s'alignent avec aucune entité renvoyée par le système), et touchent logiquement les entités inconnues (80\% du silence total). Dans la plupart des cas, une entité inconnue dans l'ensemble des entités silencieuses n'est jamais annotée, signifiant que le contexte n'est que soit très peu utilisé pour détecter les entités inconnues, soit pas assez discriminant.
+
+En analysant les erreurs de silence sur les entités connues, nous avons trouvé de probables erreurs d'annotations. Par exemple «\ phenolic\ » (TRIVIAL) dans le contexte de «\ phenolic compounds\ » n'est pas toujours annoté dans le corpus d'entrainement, alors qu'il l'est toujours dans le corpus de test. Un autre exemple est «\ thyroid hormone\ » (FAMILY), non annoté dans la plupart des cas dans les données  d'entrainement mais annoté dans le corpus de test. Ces erreurs d'annotation demeurent minoritaires, la classification des erreurs a cependant permis de les détecter très aisément.
+
+Nous avons également trouvé des cas où une présélection «\ parfaite\ » aurait corrigé une erreur. Par exemple, «\ aminoglycosides\ » (FAMILY) a bien ses préfixes et suffixes «\ amino\ » et «\ glycosides\ » reconnus, mais la somme des poids dans le modèle oriente plus vers «\ O\ » en raison des autres traits présents sur le token.
+
+Les erreurs de type concernent surtout les entités SYSTEMATIC et TRIVIAL (32\%), et plus principalement des entités de taille 1 ayant des affixes ambigus, tels que «\ -ine\ », «\ -ene\ », «\ -ide\ » ou «\ -ate\ » (42\%). Elles concernent ensuite les entités de type FAMILY confondues avec une entité TRIVIAL ou SYSTEMATIC (27\%), qui sont souvent faites sur des familles d'entités étant au singulier tels que «\ carbapenem\ » ou «\ polylysine\ ». L'erreur survient aussi sur des tokens FAMILY qui, en contexte, peuvent changer de type. «\ penicillin\ » est de type FAMILY mais le token est souvent annoté TRIVIAL car on trouve souvent un membre particulier tel que «\ penicillin G\ » annoté en TRIVIAL et assez peu «\ penicillin\ » seul.
+
+Les erreurs de frontière sont majoritairement des erreurs de taille 1 (67\%) et plus particulièrement des oublis d'un token (56\% du total). Ces erreurs sont souvent des adjectifs oubliés en début d'entité ou des noms oubliés en fin d'entité.
+
+\end{document}

@@ -1,0 +1,8 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+L'apprentissage joint est un type d'apprentissage supervisé dans lequel plusieurs tâches sont apprises en même temps. Pour des tâches se basant sur les même entrées, comme l'annotation morphosyntaxique, le chunking ou la reconnaissance d'entités nommées, un seul même réseau pourrait être utilisé pour accomplir l'ensemble des tâches, ce dernier ayant alors autant de sorties que de tâches. Cette méthode a déjà été appliquée par \textcolor{red}{Suddarth and Holden (1991) + trouver autres réfs?}. \citet{collobert2011natural} a étudié une méthode d'apprentissage joint lorsque les données en entrée sont différente. Au cours de l'apprentissage, les tâches étaient successivement entraînées les unes après au fil des itérations.
+
+Dans le cas de la tâche de reconnaissance d'entités nommées dans la section \ref{sec:taxonomy-ftb}, nous avons montré l'avantage de l'utilisation des POS et lexiques. Une première étape serait d'apprendre de manière jointe un Bi-LSTM-CRF pour le POS et le chunking. Le modèle utilisant également des représentations sur les caractères, nous pourrions également apprendre soit un modèle de langues neuronal, soit un réseau de neurones apprenant à segmenter les tokens au niveau des caractères. La représentation apprise pour ces caractères pourrait alors être injectée dans le réseau effectuant le POS et la REN.
+
+\end{document}

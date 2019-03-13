@@ -1,0 +1,144 @@
+\documentclass[citation\_needed]{subfiles}
+\begin{document}
+
+Le FTB annoté en entités nommées tel que présenté dans la section\ \ref{subsec:corpus-FTB} offre l'avantage d'avoir déjà servi à la comparaison de différentes approches dans la section\ \ref{sec:ftb-comparo}. La méthode que nous proposons ici pourra alors être comparée aux autres méthodes déjà vues précédemment. Nous profiterons de cette section pour proposer un système plus complet que pour les adresses. Ce dernier constitue à notre connaissance l'état-de-l'art pour la reconnaissance d'entités nommées du Français. Les recherches effectuées dans cette section m'ont permis d'obtenir le prix du meilleur article RECITAL à la conférence TALN-RECITAL 2017. Le répertoire que nous avons utilisé dans le cadre de cette expérience est donné dans la figure\ \ref{fig:ftb-directory}. Les éléments y sont donnés dans l'ordre de priorité, par ordre décroissant de priorité, cela signifie notamment que le lexique est prioritaire sur les déclencheurs.
+
+\begin{figure}[ht!]
+\begin{minipage}{0.49\linewidth}
+\centering
+\small
+\begin{forest}
+  for tree={
+    grow'=0,
+    child anchor=west,
+    parent anchor=south,
+    anchor=west,
+    calign=first,
+    inner xsep=7pt,
+    edge path={
+      \noexpand\path [draw, \forestoption{edge}]
+      (!u.south west) +(7.5pt,0) |- (.child anchor) pic {folder} \forestoption{edge label};
+    },
+    before typesetting nodes={
+      if n=1
+        {insert before={[,phantom]}}
+        {}
+    },
+    fit=band,
+    before computing xy={l=15pt},
+  }  
+[Entite\_nommees
+    [lieu
+        [pays]
+        [région]
+        [département]
+        [ville]
+    ]
+]
+\end{forest}
+\end{minipage}
+\begin{minipage}{0.49\linewidth}
+\centering
+\small
+\begin{forest}
+  for tree={
+    grow'=0,
+    child anchor=west,
+    parent anchor=south,
+    anchor=west,
+    calign=first,
+    inner xsep=7pt,
+    edge path={
+      \noexpand\path [draw, \forestoption{edge}]
+      (!u.south west) +(7.5pt,0) |- (.child anchor) pic {folder} \forestoption{edge label};
+    },
+    before typesetting nodes={
+      if n=1
+        {insert before={[,phantom]}}
+        {}
+    },
+    fit=band,
+    before computing xy={l=15pt},
+  }  
+[
+    [companie
+        [lexique]
+        [déclencheur]
+    ]
+    [organisation
+        [lexique]
+        [déclencheur]
+    ]
+    [personne
+        [lexique]
+        [titre ou fonction]
+    ]
+]
+\end{forest}
+\end{minipage}
+\caption{le répertoire utilisé pour la reconnaissance d'entités nommées sur le FTB}
+\label{fig:ftb-directory}
+\end{figure}
+
+Pour chaque type principal, nous distingons deux types de dictionnaires différents. Le premier est le lexique, qui regroupe un ensemble d'éléments appartenant à la classe. Les différents lexiques ont été constitués en récupérant des données de Wikipédia. Le second est la liste des tokens déclencheurs, comme vu dans la section \ref{sec:morphology-extraction}. La liste des déclencheurs a été créée automatiquement en récupérant des noms communs proches (distance < 5 tokens) de l'entité et à l'aide de l'algorithme \ref{alg:extractAffixes}. Le liste suivante donne des exemples de tokens déclencheurs que nous avons automatiquement extraits à l'aide de l'algorithme \ref{alg:extractAffixes} :
+\begin{itemize}
+    \item Company
+        \begin{itemize}
+            \item préfixes : société, compagnie, banque, bourse, caisse, crédit, groupe
+            \item suffixes : BV\footnote{\emph{Naamloze Vennootschap} : équivalent néerlandais de la société anonyme}, NV\footnote{\emph{Bekende Vlaming} : équivalent néerlandais de la société anonyme à responsabilité limitée}, SA, SARL, Bank, Corp, inc, group
+        \end{itemize}
+    \item Organization
+        \begin{itemize}
+            \item préfixes : TV, Cour, Ecole, Fonds, Force, Monde (voir partie\ \ref{subsec:morphology-error-analysis}), Parti, Radio, Union, Agence
+        \end{itemize}
+\end{itemize}
+
+Dans le tableau\ \ref{tab:ftb6-directory-vs-NN} se trouve la comparaison entre les résultats de SEM, présenté en section\ \ref{subsec:SEM}, et du meilleur résultat que nous avons obtenu à l'aide de l'utilisation du répertoire. Il a permis d'améliorer globalement l'ensemble des résultats obtenus avec SEM, que ce soit en matière de précision, rappel et f-mesure. La plus grande amélioration se fait sur la précision (+1.35), l'amélioration sur le rappel est plus faible (+0.78). Dans le modèle ayant recours au répertoire, nous n'avons utilisé aucun trait morphologique (préfixes, suffixes, présence de chiffre) et assez peu de traits booléens (deux traits pour la capitalisation). Nous avons donc un modèle beaucoup plus simple, autant en termes de nombre de features que d'interprétabilité, mais qui demeure plus efficace et permet une meilleure généralisation de la connaissance.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+Expérience                & Précision & Rappel & F-mesure \\
+\hline
+\emph{Baseline}           & 85.89     & 76.88  & 81.13 \\
+a. l/tokens                 & \textbf{89.42}     & 69.2   & 78.02 \\
+b. l/POS                  & 85.4      & 76.88  & 80.92 \\
+c. l/chunking             & 88.95     & 74.83  & 81.28 \\
+d. (b) +préfixes/suffixes & 86.48     & 78.58  & 82.34 \\
+e. (c) +préfixes/suffixes & 87.26     & 77.73  & 82.22 \\
+\hline
+f. (d) +noms voisins           & 85.86 & 78.75 & 82.15 \\
+g. (d) +prochain verbe (forme) & 86.21 & \textbf{78.92} & 82.41 \\
+h. (d) +classes prochain verbe & 85.89 & \textbf{78.92} & 82.26 \\
+\hline
+(f) + (g) & 86.03 & 78.84 & 82.28 \\
+(f) + (h) & 86.77 & \textbf{78.92} & \textbf{82.66} \\
+\hline
+\end{tabular}
+\caption{Les premiers résultats obtenus sur le FTB. l/X indique l'utilisation d'un ensemble de lexiques où les tokens non reconnus sont remplacés par l'information X.}
+\label{tab:ftb-first-results}
+\end{table}
+
+Les résultats sont détaillés dans le tableau \ref{tab:ftb-first-results}. Les expériences (a) à (c) montrent l'utilisation de tokens et du répertoire uniquement. De façon assez prévisible, les tokens donnent une très forte précision mais un mauvais rappel, tandis que les POS donnent un meilleur rappel. Les chunks semblent être à mi-chemin entre ces deux informations en termes de qualité, ce qui peut paraître étonnant étant donné qu'il s'agit d'une information plus générale que le POS. Cela vient du fait que la plupart des entités nommées correspondent à un chunk nominal sans le déterminant, la fin d'une entité correspondant à la fin d'un chunk nominal. La majorité des erreurs faites dans (c) sont sur des entités de taille 1 absentes des dictionnaires, où l'information du chunk n'est donc pas utilisable. Les expériences (d) et (e) montrent que le POS semble avoir un léger avantage par rapport au chunking en termes de qualité, particulièrement en termes de rappel. La combinaison des différentes expériences de (a) à (c) n'a pas donné d'amélioration significative du modèle, nous avons donc utilisé l'expérience (b) comme base pour les autres expériences. L'ajout des verbes et classes de verbes n'a pas donné d'amélioration significative et donnait même plus souvent lieu à une dégradation des résultats.
+
+\begin{table}[ht!]
+\centering
+\small
+\begin{tabular}{|c|ccc|ccc|ccc|}
+\hline
+entité                  & \multicolumn{3}{c|}{location} & \multicolumn{3}{c|}{organization} & \multicolumn{3}{c|}{person} \\
+système                 & SEM  & LSTM & CRF             & SEM  & LSTM & CRF                 & SEM  & LSTM & CRF \\
+\hline
+précision               & 92.6 & 90.5 & 92.92           & 84.7 & 84.2 & 82.49               & 84.9 & 84.7 & 86.85 \\
+rappel                  & 88.4 & 83.9 & 86.29           & 72.6 & 81.1 & 77.59               & 89.8 & 91.3 & 89.81 \\
+f-mesure                & 90.4 & 87.1 & 89.48           & 77   & 82.6 & 79.97               & 87.2 & 87.9 & 88.31 \\
+\hline
+\end{tabular}
+\caption{La qualité otbenue sur le FTB comparée aux autres méthodes par apprentissage automatique. CRF est ici le CRF enrichi à l'aide du répertoire}
+\label{tab:ftb6-directory-vs-NN}
+\end{table}
+
+De nombreux tokens présents dans les répertoires sont ambigus, dans le sens où ils peuvent apparaître dans plusieurs lexiques. Dans la section suivante, nous détaillerons comment nous avons géré ces ambiguïtés et comment cette gestion peut influer sur la qualité finale du modèle.
+
+\end{document}

@@ -1,0 +1,41 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Le principe de la cascade de CRF linéaires (ou tout autre type d'étiqueteur linéaire) pour l'annotation structurée est très simple, mais s'est montré très efficace \citep{ratnaparkhi1997linear,Tsuruoka09}. Il consiste à utiliser plusieurs CRF (un minimum de 2) et à les utiliser successivement afin de prédire, couche par couche, les différents niveaux d'un arbre d'analyse. Un exemple de cette annotation couche par couche est donnée dans la figure \ref{fig:Quaerov1-vs-v2}. Le déroulement pour 2 CRF est le suivant : Le premier CRF trouve les feuilles de l'arbre à prédire, le second recréant les niveaux supérieurs de l'arbre de façon récursive, jusqu'à ne plus trouver de nouvelles entités. Cet algorithme se généralise à un nombre arbitraire de CRF. Nous parlerons principalement ici de la cascade d'annotations sur le corpus Quaero, l'un des rares corpus d'entités nommées structurées à notre connaissance.
+
+Les entités Quaero contiennent potentiellement de nombreuses imbrications, comme décrit dans la section\ \ref{subsec:corpus-quaero}, l'entité la plus profonde ayant 9 niveaux. La façon la plus simple de gérer la structure des entités de Quaero est d'utiliser des modèles spécifiques pour les composants et les entités. Certaines entités pouvant être les composants d'autres entités (comme c'est souvent le cas avec les montants) justifie d'autant plus l'utilisation de modèles séparés : si nous n'utilisions qu'un unique modèle à cet effet, le CRF devrait apprendre à annoter de façon différente la même entité, sans compter l'augmentation du nombre d'annotations rendant le modèle d'autant plus coûteux. Il convient également de conserver une forme de contexte au niveau des annotations faites aux étapes précédentes. À cet effet, nous proposons deux approches différentes. La première est une approche que nous appellerons \emph{kickstarted}. Nous y considérons deux grandes étapes. La première se fait en l'abscence de contexte, l'étiqueteur découvre un premier ensemble d'entités. Cet ensemble servira alors de contexte dans la seconde passe, où l'étiqueteur effectue une annotation récursive, cette fois en utilisant un contexte d'annotation calculé aux étapes précédentes. La seconde approche sera dite \emph{bootstrapped} et se veut plus simple : il n'y a qu'une seule passe, celle récursive. L'algorithme apprend alors directement la récursion et ne garde en mémoire que les annotations de plus haut niveau. À la première étape, la mémoire est vide et est remplie d'une valeur spécifique pour signaler que rien n'a encore été trouvé. %On y trouve notamment les composants d'une entité, la métonymie (ex: entre un pays et son gouvernement) et des annotations contenues dans des composants d'une entité. Une constante de l'annotation Quaero est qu'un composant ne peut être le plus haut niveau d'annotation, un composant est toujours dominé par une entité. Afin de modéliser cette succession, nous enchaînons de successions de deux CRF : un pour les composants et un pour les entités, illustré par un automate dans la figure \ref{fig:quaero-automaton}. Cette modélisation a également l'avantage de ne pas mélanger la reconnaissance des composants et entités qui rendrait plus complexe l'apprentissage du modèle, ne serait-ce qu'en nombre d'étiquettes. Au lieux d'entraîner seulement un seul modèle, nous entraînons des couples de modèles : un pour reconnaître les composants et un pour reconnaître les entités. D'autres méthodes existent pour effectuer du parsing en utilisant des modèles linéaires. On peut citer notamment \cite{ratnaparkhi1997linear}, qui utilise des modèles spécifiques pour faire la l'accumulation des entités, ce qui peut rendre l'analyse des erreurs difficile.
+
+Nous avons observé dans nos expériences que les différentes cascades de CRF linéaires parvenaient à annoter des entités jusqu'à une profondeur de 6. Cela montre clairement la capacité de nos modèles à gérer la récursion, ils sont donc plus généraux que les CRF plus naïfs à profondeur fixe utilisés dans la campagne Quaero.
+
+Si nous nous référons à l'exemple donné dans la section\ \ref{subsec:corpus-quaero}, une première annotation donnerait au minimum \emph{kind} pour "côte", puis retrouverait "côte d'Ivoire comme un \emph{loc.phys.geo}, et ainsi de suite, jusqu'à annoter l'ensemble de l'entité (ou à fournir une annotation ne rajoutant pas de nouvel élément à l'entité actuelle).
+
+L'algorithme \ref{alg:AnnotationCascade} montre l'approche générale à la cascade d'annotations linéaires.
+
+\begin{algorithm}[ht!]
+\caption{Algorithme générique pour la cascade d'annotations linéaires}
+\label{alg:AnnotationCascade}
+\begin{algorithmic}
+    \Function{Cascade\_Modeles\_Lineaires}{$corpus,mdls\_amorce, mdls\_recurrence$}
+    \State \Comment mdls\_amorce est la liste des modèles servant à générer les premier niveaux.
+    \State \Comment mdls\_recurrence est la liste des modèles créant les niveaux de façon récurrente.
+    \State \Comment mdls\_amorce peut être vide.
+    \State annotations $\gets$ $\varnothing$;
+    \State currentAnnotations $\gets$ $\varnothing$;
+    \For{modele \textbf{in} mdls\_amorces}
+        \State annotations $\gets$ annotations $\cup$ annote(Corpus, modele);
+    \EndFor;
+    \State newAnnotations $\gets$ (annotations $\neq$ $\varnothing$ \textbf{or} mdls\_amorce = $\varnothing$);
+    \While{newAnnotations}
+        \State annotations $\gets$ annotations $\cup$ currentAnnotations;
+        \State currentAnnotations $\gets$ $\varnothing$;
+        \For{modele \textbf{in} mdls\_recurrence}
+            \State currentAnnotations $\gets$ currentAnnotations $\cup$ annote(Corpus, modele);
+        \EndFor;
+        \State newAnnotations $\gets$ (currentAnnotations $\setminus$ annotations $\neq$ $\varnothing$);
+    \EndWhile;
+    \State \Return annotations;
+    \EndFunction;
+\end{algorithmic}
+\end{algorithm}
+
+\end{document}

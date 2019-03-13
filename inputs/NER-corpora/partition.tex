@@ -1,0 +1,10 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Lorsqu'un corpus est fourni pour effectuer une tâche, les systèmes doivent prendre en compte les spécificité du dit corpus afin d'être efficaces dessus. Afin d'éviter le biais d'être évalué sur les mêmes données ayant permis d'adapter les systèmes, il convient de découper de façon adéquate les corpus afin de réduire au maximum le biais d'évaluer des systèmes optimisés sur les données. Il existe pour cela deux méthodes principales afin de partitionner un corpus.
+
+La première est une partition entrainement / développement / test. Le corpus d'entrainement est utilisé pour définir les traits à utiliser dans un système. Le corpus de développement sert principalement à effectuer une pré-évaluation de la qualité d'un système, il sert également à en optimiser le paramétrage. Le corpus de test est le corpus servant à l'évaluation finale du système, il ne doit pas être utilisé pour optimiser les paramètres, mais uniquement pour tester la qualité d'un système. L'avantage de cette méthode est que la partition du corpus est fixe, ce qui permet une comparaison plus simple des différents systèmes.
+
+La seconde est la \textit{cross validation} (validation croisée). Nous ne parlerons ici que de sa variante la plus populaire dans le TAL, la validation croisée en N plis \citep{geisser1975predictive}. Son principe est de découper le corpus en N parts égales, d'utiliser N-1 parts pour l'entrainement et 1 part pour le test, en utilisant les N combinaisons possibles. Chaque combinaison train/test est appelée un pli. Cette méthode est conseillée lorsque le corpus est peu volumineux. Lorsque la validation croisée est utilisée, tout le corpus est utilisé, ce qui permet une évaluation des systèmes plus juste tout en limitant les phènomènes de biais.
+
+\end{document}

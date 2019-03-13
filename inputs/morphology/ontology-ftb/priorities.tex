@@ -1,0 +1,57 @@
+\documentclass[citation\_needed]{subfiles}
+\begin{document}
+
+Comme dit dans les parties précédentes, le choix des priorités quant aux différents types du répertoire est capital. Dans cette section, nous détaillerons les différences de résultats que ces changements peuvent amener. À cet effet, nous avons simplement évalué les différents ordonnancements ainsi qu'en effectuant une analyse ambigüe, où plusieurs éléments d'un répertoire peuvent reconnaître un même token ou groupe de tokens. Ici, nous évaluons l'impact sur les résultats obtenus sur le FTB en changeant l'ordre de priorité des lexiques au moment de générer les traits relatifs aux répertoires. Nous n'avons pas inclus l'influence entre organisation et entreprise car ces dernières n'avaient aucune entrée en commun. L'analyse dite ambigüe consiste à expliciter l'ensemble des ambigüités présentes dans les lexiques, ce qui se fait ici en effectuant la concaténation des différents lexiques ayant reconnu un token. Ainsi, pour chaque token du texte, nous pouvons récupérer l'ensemble des lexiques auxquels il peut appartenir et ainsi avoir des termes reconnus de façon non-ambigüe ainsi que des termes reconnus de façon ambigüe. Le contexte doit alors être utilisé pour trouver le lexique le plus approprié. Le tableau \ref{tab:results-ftb-priority} détaille les résultats obtenus en modifiant l'ordre de priorité des lexiques ainsi qu'en effectuant une analyse ambigüe. Comme nous pouvons le remarquer, cet ordre influe de façon significative sur la qualité globale du résultat. Nous pouvons cependant déduire certaines tendances quant à l'ordre des lexiques. Par exemple, le lexique des lieux doit être prioritaire sur celui des personnes, et il en va de même pour le lexique des organisations et entreprises. Notre lexique des personnes ayant un bruit assez important, lui donner une priorité faible permet de privilégier les autres lexiques, plus sûrs. L'influence est moindre entre les lieux et les organisations/entreprises, car il y a peu d'intersection entre ces derniers.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+Expérience   & Précision & Rappel & F-mesure \\
+\hline
+$P > C\&O > L$ & 85.98     & 76.79  & 81.13 \\
+$P > L > C\&O$ & 85.58     & 76.96  & 81.04 \\
+$L > P > C\&O$ & 85.47     & 77.89  & 81.50 \\
+$L > C\&O > P$ & 85.80     & 78.49  & 81.98 \\
+$C\&O > P > L$ & 85.66     & 76.36  & 80.74 \\
+$C\&O > L > P$ & 86.77     & 78.92  & 82.66 \\
+\hline
+Ambigüe      & 85.39     & 76.79  & 80.86 \\
+\hline
+\end{tabular}
+\caption{Les résultats selon la priorité accordée aux différents lexiques. P : Person, L : Location, C\&O : Company\&Organization}
+\label{tab:results-ftb-priority}
+\end{table}
+
+Comme nous pouvons le remarquer, l'ordre de priorité influe de façon significative sur la qualité globale du résultat. Nous pouvons cependant déduire certaines tendances quant à l'ordre des lexiques. Par exemple, le lexique des lieux doit être prioritaire sur celui des personnes, et il en va de même pour le lexique des organisations et entreprises. Notre lexique des personnes ayant un bruit assez important, lui donner une priorité faible permet de privilégier les autres lexiques, plus sûrs. %L'influence est moindre entre les lieux et les organisations/entreprises, car il y a peu d'intersection entre ces derniers.
+
+L'analyse ambigüe est celle dont les performances sont les plus mauvaises, autant en termes de précision que de rappel. Les problèmes principaux de l'analyse ambigüe, en comparaison avec le meilleur système, sont d'abord le silence sur les lieux, suivi d'erreurs de type puis de frontières, les entités proposées tendant à être plus courtes. Si l'on observe les poids présents dans le CRF, ces derniers diffèrent peu entre traits ambigus et non-ambigus dans les cas les plus simples, des exemples sont donnés dans le tableau \ref{tab:priorities-examples}. L'une des rares différences majeures de poids est par rapport à l'ambiguïté entre le lexique des villes et celui des entreprises. Ces ambiguïtés sont présentes presque uniquement que dans le corpus d'entraienement et très peu dans le celui de développement, ce qui explique sans doute le poids plus faible dans le cas ambigu. Les traits ambigus quant à eux tendent à suivre l'ordre de priorité ayant donné le meilleur résultat, favorisant les \emph{Company} et \emph{Organization}, puis les \emph{Location} et finalement les \emph{Person}. Les silences sont généralement dus à des ambigüités non-observées dans le corpus d'apprentissage.
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+trait & étiquette de sortie & poids\\
+\hline
+B-person ou B-city & B-Person & 0.06\\
+B-person & B-Person & 0.04\\
+\hline
+B-person ou B-city & B-Location & 1.54\\
+B-city & B-Person & 1.78\\
+\hline
+B-person ou B-organisation & B-Organization & 1.99\\
+B-organisation & B-Organization & 2.06\\
+\hline
+B-city ou B-company & B-Company & 0.97\\
+B-company & B-Company & 2.09\\
+\hline
+\end{tabular}
+\caption{Des comparaisons entre les traits ambigus et non-ambigus selon les poids attribués à l'étiquette de sortie. Ces traits sont toujours sur le token courant.}
+\label{tab:priorities-examples}
+\end{table}
+
+Partant de ce constat, nous pouvons proposer une méthode afin d'estimer un ordre proche de l'optimal. Pour ce faire, nous apprenons un modèle où une analyse ambigüe a été effectuée. En recherchant dans ce modèle les poids attribués par le CRF pour résoudre les cas spécifiquement ambigus, il est possible d'avoir une idée des lexiques plus ou moins prioritaires. L'inconvénient d'une analyse ambigüe demeure dans la combinatoire des possibles ambigüités, qui fait que toutes ne peuvent pas toujours être observées. Les cas ambigus absents du corpus d'apprentissage ne pourront pas se voir attribuer un poids par le CRF, qui sera donc incapable d'en tirer profit à l'annotation.
+
+De manière générale, l'inconnu impose aux systèmes par apprentissage de se reposer sur le contexte ou sur d'autres traits relatifs au token courant. La source principale d'inconnu demeure encore les tokens non observés dans le corpus d'apprentissage, en particulier si ces dernières ne font partie d'aucun lexique. Dans la section suivante, nous souhaitons évaluer l'intégration des tokens inconnus dans notre CRF.
+
+\end{document}

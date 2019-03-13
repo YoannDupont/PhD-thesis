@@ -1,0 +1,8 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Dans cette section, nous avons donné un algorithme simple de génération d'affixes candidats se basant sur l'algorithme de la sous-chaîne la plus longue. En récupérant les sous-chaînes détectées par l'algorithme, nous avons pu établir une base de traits afin d'alimenter un système par apprentissage automatique comme un CRF. Après les avoir constitués, nous avons montré comment les sélectionner et les ordonnancer afin de les intégrer au mieux. Cette approche peut donc se voir comme un générateur d'observations pertinentes. Elle permet d'éviter de générer l'ensemble des sous-séquences de chaque token ou d'utiliser l'ensemble des segments renvoyés par un segmenteur morphologique, qui génèrent alors un grand nombre de traits où nombre d'entre eux sont non pertinents. En ce sens, la méthode développée ici permet de ne générer qu'un ensemble restreint de traits pertinents. Les expériences que nous avons menées dans les sections précédentes nous ont permis de valider notre approche sur le corpus CHEMDNER sur la tâche CEM. Nous observons que l'amélioration des résultats se situe principalement sur les entités connues, qui nous ont servi de données d'entrée pour notre algorithme d'extraction. Bien que nous n'avons pas beaucoup amélioré la qualité sur les entités inconnues, nous sommes confiants que nous pourrons l'améliorer à l'avenir.
+
+Afin de valider cette approche d'extraction de sous-séquences, nous allons comparer cette méthode avec un CRF dont les traits seraient générés par Morfessor ou en générant l'ensemble des traits.
+
+\end{document}

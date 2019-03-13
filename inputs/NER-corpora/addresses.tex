@@ -1,0 +1,55 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Le corpus d'adresses américaines de \citet{yu2007high} est un corpus de fichiers HTML annotés manuellement. Ce corpus a été constitué en requêtant Google avec différents jeux de requêtes, chaque requête ayant permis de récupérer 1000 pages. Les pages web récupérées par ce processus ont alors été annotées, seules celles contenant au moins une adresse ont été gardées. Ces pages ont ensuite été regroupées en trois catégories : 
+
+\begin{itemize}
+\item \emph{Contact} a été constitué à l'aide de deux requêtes : "\textit{contact us}"\footnote{"Contactez-nous" en anglais.} et "\textit{contact information}"\footnote{"coordonnées" en anglais.};
+\item \emph{Hotel} a été constitué avec les requêtes "Hotel Los Angeles", "Hotel San Francisco", "Hotel New York" et "Hotel Seattle";
+\item \emph{Pizza} a été constitué à l'aide des requêtes "Pizza Los Angeles", "Pizza San Francisco", "Pizza New York", et "Pizza Seattle".
+\end{itemize}
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|p{0.21\linewidth}|p{0.21\linewidth}|p{0.21\linewidth}|p{0.21\linewidth}|}
+\hline
+\multicolumn{4}{|c|}{\textbf{corpus d'adresses de \cite{yu2007high}}} \\
+\hline
+\multicolumn{2}{|c|}{\textbf{général}} & \multicolumn{2}{c|}{\textbf{annotations}} \\
+\hline
+\textbf{type de texte} & pages webs & \textbf{niveaux d'analyse} & $\emptyset$ \\
+\hline
+\textbf{$\emptyset$} & phrases & \textbf{structuration} & non* \\
+\hline
+\textbf{volume texte brut} & 1.9 Mo & \textbf{types\newline d'entités} & 7 \\
+\hline
+\textbf{format} & HTML & \textbf{entités\newline inconnues} & 88\% \\
+\hline
+\textbf{langue(s)} & Anglais & \textbf{$\kappa$} & $\emptyset$ \\
+\hline
+\end{tabular}
+\scriptsize{\\ *les adresses n'ont pas leurs composants identifiés, mais ces derniers sont capitaux pour leur identification.}
+\caption{Fiche récapitulative du corpus d'adresses de \cite{yu2007high}}
+\label{tab:addresses-recap-card}
+\end{table}
+
+La quantité d'annotions du corpus est donnée dans le tableau \ref{tab:address-overview}. Nous voyons également que la majorité des adresses sont uniques (88\%). Cette spécificité des adresses rend le travail intéressant, les systèmes proposant leur identification devant être capables de généraliser au-delà des simples tokens afin d'être efficaces. Les adresses sont également intéressantes en raison de leur côté structuré. En effet, une adresse est composée de divers éléments apparaissant en plus ou moins grand nombre et dans un ordre plus ou moins rigide.
+
+\begin{table}[ht!]
+\begin{tabular}{|c|ccc|}
+\cline{2-4}
+\multicolumn{1}{c|}{}   & nombre de pages web   & nombre d'adresses & nombre d'adresses uniques \\
+\hline
+Contact                 & 897                   & 2804              & 2464 \\
+Hotel                   & 956                   & 6150              & 5363 \\
+Pizza                   & 504                   & 3941              & 3539 \\
+\hline
+All                     & 2,357                 & 12895             & 11343 \\
+\hline
+\end{tabular}
+\caption{Vue d'ensemble du corpus d'adresses en termes de documents et d'annotations.}
+\label{tab:address-overview}
+\end{table}
+
+
+\end{document}

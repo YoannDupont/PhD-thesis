@@ -1,0 +1,82 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+La question de la qualité des corpus annotés produits par les humains est cruciale. En effet, lorsque des systèmes doivent être créés pour répondre à une tâche particulière, ces derniers se basent souvent sur des exemples observés dans les données. Il est nécessaire que ces systèmes soient alors conçus et évalués de manière juste. Le processus d'annotation d'un corpus par des êtres humains est long, coûteux, fastidieux et sujet à l'erreur. En effet, les humains n'étant pas parfaits eux-mêmes, ces derniers commettent des erreurs. Diverses causes récurrentes existent parmi lesquelles, notamment :
+
+\begin{itemize}
+    \item \textbf{la gestion des cas ambigus}. En effet, même avec un bon guide d'annotation, il est rare que tous les cas soient couverts, ce qui peut pousser les annotateurs à prendre des décisions arbitraires.
+    \item \textbf{l'inconsistance d'un annotateur}. Les humains qui effectuent des annotations annotent rarement de la même façon au début de la phase d'annotation qu'à la fin.
+    \item \textbf{les désaccords entre annotateurs}. Comme nous l'avons vu, les humains ne sont pas toujours cohérents avec eux-mêmes, ce phénomène est souvent amplifié lorsque plusieurs humains font partie du processus.
+\end{itemize}
+
+Il est rarement possible qu'un comité puisse évaluer et corriger l'ensemble des annotations d'un corpus, car ce serait trop demandant en ressources humaines. Il est possible de réduire ces problèmes en amont, \citet{fort2009towards} propose notamment d'utiliser des guides d'annotations indiquant «\ ce qui doit être annoté, plutôt que comment l'annoter\ » et en ayant recourt à des outils spécialisés. Une fois les annotations produites, il est possible de donner une idée de leur qualité selon deux mesures complémentaires :
+
+\begin{itemize}
+    \item \textbf{l'accord inter-annotateurs}, qui mesure la stabilité de l'annotation d'une personne à une autre. Un faible accord inter-annotateurs peut indiquer soit un guide d'annotation peu clair soit une tâche trop complexe.
+    \item \textbf{l'accord intra-annotateur}, qui mesure la consistance d'un annotateur à travers le temps.
+\end{itemize}
+
+L'accord intra-annotateur étant assez peu utilisé par rapport à l'accord inter-annotateurs, nous ne parlerons dans la suite que du second.
+
+Une première mesure de l'accord inter-annotateurs serait de simplement prendre le pourcentage d'accord entre deux annotateurs afin d'avoir une estimation de la cohérence d'une annotation. Supposons que nous avons 100 documents pour lesquels deux catégories peuvent être attribuées, A ou B. Cet ensemble de catégories sera noté $C$. Afin d'évaluer l'accord inter-annotateurs, nous avons demandé à deux personnes, h1 et h2, d'annoter les 100 documents. Les résultats des annotations de h1 et h2 sont donnés dans le tableau \ref{tab:h1-h2-annotations}.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|cc|cc|}
+\cline{3-4}
+\multicolumn{2}{c|}{}     & \multicolumn{2}{c|}{h1} \\
+\multicolumn{2}{c|}{}     & A  & B \\
+\hline
+\multirow{2}{*}{h2}   & A & 55 & 20 \\
+                      & B & 10 & 15 \\
+\hline
+\end{tabular}
+\caption{les annotations de h1 et h2 sur 100 documents. Les scores sur la diagonale indiquent que h1 et h2 sont d'accord. Les autres scores indiquent le nombre de désaccords.}
+\label{tab:h1-h2-annotations}
+\end{table}
+
+Afin de calculer les différents scores nécessaires au calcul du $\kappa$, nous définissons une fonction $count(h1,c1,h2,c2)$ comptant le nombre de fois que l'annotateur h1 a pris la décision c1 tandis que l'annotateur h2 a pris la décision h2. Si l'on se réfère au tableau \ref{tab:h1-h2-annotations}, l'accord global observé entre h1 et h2, noté $p_{o}$, est équivalent à l'indice de Jaccard :
+
+\begin{equation}\label{eq:h1-h2-raw-agreement}
+p_{o}(h1,h2) = \frac{|h1 \cap h2|}{|h1 \cup h2|} = \frac{\sum_{c \in C} count(h1,c,h2,c)}{\sum_{c1 \in C} \sum_{c2 \in C} count(h1,c1,h2,c2)} = \frac{55 + 15}{55 + 20 + 10 + 15} = 0.7
+\end{equation}
+
+Où $h1 \cap h2$ est l'interction des décisions de h1 et h2 et $h1 \cup h2$ est l'union des décisions prises h1 ou h2. $p_{o}$ mesure donc la proportion d'accord entre les annotateurs. L'inconvénient de cette mesure est que les classes majoritaires vont avoir plus de poids et faire gonfler artificiellement la valeur de l'accord. Pour s'en convaincre, calculons la probabilité d'un accord selon une classe précise. Pour un élément $c \in C$ elle se note $p_{c}$ et est ici :
+
+\begin{equation}\label{eq:h1-h2-per-class-agreement}
+\begin{aligned}
+p_{A} &= \frac{\sum_{c \in C} count(h1,A,h2,c)}{\sum_{c1 \in C} \sum_{c2 \in C} count(h1,c1,h2,c2)} \times \frac{\sum_{c \in C} count(h1,c,h2,A)}{\sum_{c1 \in C} \sum_{c2 \in C} count(h1,c1,h2,c2)} \\
+      &= \frac{55 + 10}{55 + 20 + 10 + 15} \times \frac{55 + 20}{55 + 20 + 10 + 15} = 0.65 \times 0.75 = 0.4875 \\
+\\
+p_{B} &= \frac{\sum_{c \in C} count(h1,B,h2,c)}{\sum_{c1 \in C} \sum_{c2 \in C} count(h1,c1,h2,c2)} \times \frac{\sum_{c \in C} count(h1,c,h2,B)}{\sum_{c1 \in C} \sum_{c2 \in C} count(h1,c1,h2,c2)} \\
+      &= \frac{20 + 15}{55 + 20 + 10 + 15} \times \frac{10 + 15}{55 + 20 + 10 + 15} = 0.35 \times 0.25 = 0.0875 \\
+\end{aligned}
+\end{equation}
+
+La probabilité d'un accord sur l'ensemble des classes que l'on peut espérer attendre, noté $p_{e}$, se note alors :
+
+\begin{equation}\label{eq:h1-h2-global-per-class-agreement}
+p_{e} = p_{A} + p_{B} = 0.4875 + 0.0875 = 0.575
+\end{equation}
+
+Comme nous le voyons dans l'équation \ref{eq:h1-h2-global-per-class-agreement}, l'accord par rapport à chaque classe est bien inférieur à l'accord global de 0.7 donné dans l'équation \ref{eq:h1-h2-raw-agreement}. L'accord global observé a un autre inconvénient : il considère comme équiprobable la probabilité d'un accord ou d'un désaccord. Dans la réalité, lorsqu'une tâche doit être réalisée, les annotateurs ont une certaine connaissance de la tâche qui fait qu'ils auront tendance à être d'accord de manière plus régulière. Une mesure d'accord inter-annotateurs, pour être plus informative, doit pouvoir prendre en compte l'accord que l'on est en mesure d'attendre, appelé \emph{accord attendu}, afin d'évaluer si l'annotation est effectivement bonne ou mauvaise. La métrique la plus communément utilisée pour mesurer l'accord inter-annotateurs qui prend compte de cette attente est le \emph{$\kappa$ de Cohen} \citep{cohen1960coefficient}.
+
+Le $\kappa$ de Cohen (simplement $\kappa$ par la suite) se définit comme :
+
+\begin{equation}\label{eq:kappa-definition}
+\kappa = \frac{p_{o} - p_{e}}{1 - p_{e}} = 1 - \frac{1 - p_{o}}{1 - p_{e}}
+\end{equation}
+
+Où $p_{o}$ est l'accord global observé et $p_{e}$ l'accord global attendu. Si nous appliquons la formule, nous avons un score de $\kappa$ étant :
+
+\begin{equation}\label{eq:kappa-here}
+\kappa = 1 - \frac{1 - p_{o}}{1 - p_{e}} = 1 - \frac{1 - 0.7}{1 - 0.575} \approx 0.29
+\end{equation}
+
+Bien qu'il n'existe pas de  grille globalement acceptée pour interpréter $\kappa$, il est accepté que ce score de 0.29 est très bas et montre un global désaccord. Le $\kappa$ a cependant un potentiel problème : il ne peut mesurer l'accord qu'entre deux annotateurs. S'il faut évaluer l'accord de plus de deux annotateurs, d'autres mesures doivent être employées. La mesure d'un $\kappa$, bien que très importante, est malheureusement rare dans la vraie vie. En effet, les annotateurs sont rares (il peut n'y en avoir qu'un seul) et le processus d'annotation très coûteux sur de larges données. Des contraintes de temps peuvent faire que le $\kappa$ n'est pas calculé. Il n'est pas impossible qu'une seule personne se voit annoter l'entièreté d'un corpus, rendant impossible le calcul d'un $\kappa$. Il faut par ailleurs noter qu'un $\kappa$ n'est pas auto-suffisant. Lorsqu'un corpus annoté doit être fourni, il est important d'effectuer une passe de révision des annotations une fois le premier travail d'annotation effectué.
+
+Un autre inconvénient du $\kappa$ pour les entités nommées, et non des moindres, est dans son calcul même. En effet, le $\kappa$ suppose que toutes les instances soient connues, même les négatives, ce qui est inconnu pour les entités. Il existe divers moyens de l'approximer, bien qu'aucun ne soit strictement exact. \citet{grouin2011proposal} ont proposé diverses méthodes pour l'approximer. Celle nous semblant la plus juste utilise comme ensemble de référence l'union des décisions prises par les deux annotateurs. \citet{deleger2012building} propose d'utiliser la f-mesure (détaillée dans la section \ref{sec:NER-quality-measurement}) à la place du $\kappa$.
+
+À présent que nous avons une métrique capable de mesurer la stabilité d'une annotation (donc sa reproductibilité), nous allons détailler les différents corpus que nous avons considérés dans le cadre de la thèse.
+
+\end{document}

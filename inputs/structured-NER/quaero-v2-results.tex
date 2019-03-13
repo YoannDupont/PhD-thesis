@@ -1,0 +1,26 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Dans cette sections, nous détaillerons les résultats que nous avons eus sur Quaero v2. Nous n'avons pu obtenir de résultats qu'avec la cascade \textit{kickstart}, ces derniers peuvent alors se comparer avec ceux décrits dans la section \ref{subsec:kickstart-parsing}. Il n'existe à notre connaissance aucun résultat sur ce corpus, ceux proposés ici constituent donc de facto l'état-de-l'art.
+
+\begin{table}[ht!]
+    \centering
+    \begin{tabular}{|l|c|}
+    \hline
+    expérience     & SER \\
+    \hline
+    notre baseline & \textbf{33.2} \\
+    +verbes        & 33.7 \\
+    jeu complet    & 34.8 \\
+    \hline
+    \end{tabular}
+    \caption{Nos meilleurs résultats sur Quaero v2.}
+    \label{tab:quaero-v2-results}
+\end{table}
+
+%As can be seen in table \ref{tab:quaero-v2-results}, we obtain better results on Quaero v2 than on Quaero v1, due to improved typology and a more thorough human annotation. We also see that adding neighboring verbs has a detrimental effect on the quality of the annotation, no matter the experiment. Dictionaries, surprisingly, also had a detrimental effect on our results, but far smaller on Quaero v2 than on Quaero v1, which shows that a lot of the noise induced by dictionaries in Quaero v1 were actually entities missed by the annotators (SER penalizes more systems that are noisy). Looking at macro F1-scores in Table \ref{tab:quaero-v2-results}, we can see that the full set of features yields better results, and that the lower micro F1-score is due to the imbalance in data set, as told in section \ref{sec:quaero-corpus}. Table \ref{tab:quaero-v2-differences} shows some examples of difference in terms of F1-scores between the baseline and the other experiments, displaying why using the full set leads to worse results: the quality on \emph{amount}, which is disproportionately represented, decreased significantly.
+Comme nous pouvons le voir sur la table \ref{tab:quaero-v2-results} en comparaison de la table \ref{tab:kickstart-results}, nous obtenons de meilleurs résultats sur Quaero v2 que ceux que nous avons obtenus sur Quaero v1. Ces améliorations reflètent l'évolution des types utilisés et de l'annotation plus couvrante. Nous notons que l'ajout des verbes voisins a un effet négatif sur la qualité de l'annotation produite par le CRF, quelle que soit l'expérience. Les lexiques, lorsqu'ils sont ajoutés comme traits booléens, détériorient également la qualité de nos résultats. Il est à noter que ces pertes sont moins importantes par rapport à celles obtenues sur Quaero v1. Cela semble indiquer que certains résultats classés comme étant du bruit en v1 étaient en réalité des annotations manquées par les annotateurs (le SER pénalisant plus le bruit que les autres erreurs).
+
+Dans la prochaine section, nous ferons une analyse des erreurs détaillée de notre système afin d'en donner les limitations ainsi que d'avoir des pistes pour les améliorer à l'avenir.
+
+\end{document}

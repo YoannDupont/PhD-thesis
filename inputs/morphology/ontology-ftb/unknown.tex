@@ -1,0 +1,41 @@
+\documentclass[citation\_needed]{subfiles}
+\begin{document}
+
+Une grande source d'erreurs pour les algorithmes d'apprentissage automatique vient des tokens et entités inconnus. Typiquement, lorsqu'un algorithme d'apprentissage automatique rencontre un token inconnu, il recourt au contexte et/ou à la morphologie afin de trouver une lexique pertinente. Le caractère inconnu d'un token offre une information intéressante pour l'analyse de ce dernier : en effet, de nombreuses entités nommées peuvent être déclenchées dans le contexte d'un token inconnu. Afin de donner aux CRF l'information du caractère inconnu d'un token, nous pouvons extraire le lexique du corpus d'apprentissage et supprimer les tokens trop peu fréquents, laissant ainsi le lexique des tokens connus. Une fois ce lexique constitué, il est possible d'ajouter de plusieurs façons l'information «\ token inconnu\ ». La première consiste à intégrer ce lexique directement dans le répertoire en lui accordant la plus faible priorité : ainsi, les CRF pourront obtenir une vision contextualisée d'un token inconnu et pourront ainsi mieux le désambigüiser. Une seconde serait de rajouter un trait booléen «\ token inconnu\ » afin de l'utiliser comme tout autre trait booléen dans le CRF. Cela permet également, pour les traits discutés dans la section \ref{sec:taxonomy-ftb}, de rajouter une information supplémentaire pouvant s'ajouter aux informations déjà présentes : par exemple, un «\ nom propre inconnu\ » sera une information plus pertinente que simplement un «\ token inconnu\ ». Dans nos expériences, seul l'ajout d'un nouveau trait, où les tokens appartenant aux lexiques des tokens inconnus étaient remplacés par "\_inconnu\_", a permis d'obtenir des gains significatifs, les meilleurs résultats étant obtenus en considérant inconnus les tokens apparaissant au plus 4 fois, après avoir testé l'ensemble des valeurs entre 1 et 5.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|c|cccccccc|}
+\hline
+\textbf{Mots}   & la   & société & Warner                     & fondée & par  & les  & frères & Warner \\
+\hline
+\textbf{compte} & $>$4 & $>$4    & \textbf{\textcolor{red}{$<=$4}}   & $>$4   & $>$4 & $>$4 & $>$4   & \textbf{\textcolor{red}{$<=$4}} \\
+\textbf{inconnu4}    & la   & société & \textbf{\textcolor{red}{\_inconnu\_}} & fondée & par  & les  & frères & \textbf{\textcolor{red}{\_inconnu\_}}  \\
+\hline
+\end{tabular}
+\caption{Comment les traits "inconnu4" sont générés. Les tokens ayant un nombre d'occurrences $<=$4 sont remplacés par "\_inconnu\_".}
+\end{table}
+
+Les résultats donnés par le trait "inconnu4" sont donnés dans le tableau\ \ref{tab:results-ftb-word-bigrams}.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|l|ccc|}
+\hline
+Expérience   & Précision & Rappel & F-mesure \\
+\hline
+a. CRF                                                             & 86.77 & 78.92 & 82.66 \\
+b. (a) +concat(token$_{i}$,token$_{i+1}$) avec i $\in$ \{-2,1\}        & 87.59 & 79.52 & 83.36 \\
+c. (a) +concat(inconnu4$_{i}$,inconnu4$_{i+1}$) avec i $\in$ \{-2,1\}    & 88.15 & 79.95 & 83.85 \\
+d. (c) +concat(inconnu4$_{i}$,o/POS$_{0}$) avec i $\in$ \{-2,-1,1,2\} & \textbf{88.41} & \textbf{80.03} & \textbf{84.05} \\
+\hline
+(c) + tokens inconnus = lexique du répertoire & 86.80 & 79.69 & 83.10 \\
+\hline
+\end{tabular}
+\caption{Les résultats obtenus sur le FTB en gérant le caractère inconnu des tokens. Dans (a), les tokens successifs sont concaténés. Dans (b), les tokens (ou "\_inconnu\_" si trop peu fréquent) successifs sont concaténés. Dans (c), les tokens (ou "\_inconnu\_" si trop peu fréquent) sont concaténé au POS du token courant.}
+\label{tab:results-ftb-word-bigrams}
+\end{table}
+
+
+
+\end{document}

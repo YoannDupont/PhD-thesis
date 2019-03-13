@@ -1,0 +1,122 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Nombre de systèmes par apprentissage intègrent des connaissances linguistiques d'une façon ou d'une autre, ceux n'en intégrant aucune peinant à être compétitifs comme l'a conclu \citet{jungermann2007named}, que cette connaissance soit lexicale et morphologique \citep{raymond2010reconnaissance,constant2011integrer,holat2016fouille}, une représentation des tokens calculée sur des volumes importants de données textuelles \citep{collobert2008unified,ratinov2009design,lample2016neural} ou l'apprentissage joint de plusieurs tâches \citep{collobert2008unified,luo2015joint}.
+
+Il est courant dans le TAL d'utiliser un ensemble de lexiques, appelé connaissances \emph{a priori}, afin d'aider les systèmes par apprentissage à avoir des modèles plus génériques et robustes. Généralement, à chaque type de sortie correspond un lexique spécifique. Les traits issus de l'utilisation d'un ensemble de lexiques, appelé « connaissances \emph{a priori} », sont un point important de \citet{raymond2010reconnaissance}, qui nous servira donc de point de départ. Ces traits sont en fait la combinaison de plusieurs éléments, que l'on peut rapprocher des motifs décrits par \citet{holat2016fouille}. Ils sont générés en trois étapes :
+\begin{enumerate}
+    \item Les connaissances \emph{a priori} sont appliquées. Ici, chaque token reconnu par un lexique est marqué avec l'identifiant de ce dernier.
+    \item Les tokens dits « importants » (qui ont une forte information mutuelle avec une classe de sortie) sont laissés tels quels.
+    \item La partie du discours (\emph{Part Of Speech}, POS) est utilisée pour les tokens non reconnus dans les deux étapes précédentes.
+\end{enumerate}
+
+Nous avons légèrement modifié ces traits ici : à la place des tokens importants, nous avons créé des listes de tokens déclencheurs pour chaque type d'entité principal. Ces listes ont été constituées manuellement et enrichies à l'aide de noms communs récupérés dans le contexte proche des entités dans l'ensemble d'entrainement. L'inconvénient des tokens importants est que seule leur forme de surface est utilisée, ce qui pose deux problèmes. Premièrement cette liste est figée et toute modification impose de réapprendre le modèle, alors qu'un token déclencheur peut simplement être ajouté à la liste correspondante. De plus, il n'est pas garanti que l'ensemble des tokens importants présents dans l'ensemble d'apprentissage soit exhaustif. Si un token important est absent du corpus d'apprentissage, les CRF seront incapables de l'utiliser pendant l'annotation. À l'inverse, les tokens absents des lexiques peuvent être rajoutés au fur et à mesure, donnant aux CRF des informations qu'ils peuvent utiliser.
+
+Le tableau \ref{tab:ontology-company-vs-person} présente des traits générés par la procédure précédente. Cette représentation est équivalente à celle tabulaire du tableau \ref{tab:CRF-input-tabular}, le format "en lignes" ici est plus pratique pour comparer les différentes informations. Les lignes commençant par « l/X » signifient que « X » a été utilisé pour remplacer les tokens qu'aucun lexique n'a reconnu. Nous voulions évaluer l'utilisation de deux ressources en plus des POS, l'une plus précise — les tokens — et l'autre plus générale — le chunking \citep{Abney91}. L'intuition est que les tokens permettent d'avoir des contextes plus forts, tandis que le chunking permet une plus grande généralisation — les entités nommées correspondant généralement à des chunks nominaux ou prépositionnels. Le tableau \ref{tab:ontology-address-example} représente la même information, mais pour les adresses.
+
+L'algorithme \ref{alg:extractAffixes} permet de récupérer des affixes récurrents. Dans le cas où ces unités sont des tokens, il peut alors être utilisé sur les séquences de tokens constituant une entité nommées afin d'en extraire les tokens déclencheurs, comme indiqué sur le tableau\ \ref{tab:keyword-extraction}. Cet algorithme peut alors être utilisé pour constituer cette liste si elle n'est pas disponible, ou l'enrichir au fur et à mesure que de nouvelles entités sont découvertes.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|c|cccccccc|}
+\hline
+\textbf{tokens}      & la          & société         & Warner       & fondée          & par         & les         & frères      & Warner \\
+\hline
+\textbf{lexiques} & $\emptyset$  & comp.trigger & last-name    & $\emptyset$     & $\emptyset$ & $\emptyset$ & $\emptyset$ & last-name \\
+\textbf{l/tokens}    & la          & comp.trigger & last-name    & fondée          & par         & les         & frères      & last-name \\
+\textbf{l/POS}     & DT          & comp.trigger & last-name    & ADJ             & PRP         & DET         & NC          & last-name \\
+\textbf{l/chunks}  & NP          & comp.trigger & last-name    & AP              & B-PP        & I-PP        & I-PP        & last-name \\
+\hline
+\end{tabular}
+\caption{Exemple de traits générés depuis un ensemble de lexiques. "comp.trigger" marque un token déclencheur pour l'entité "Company".}
+\label{tab:ontology-company-vs-person}
+\end{table}
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|c|ccccccc|}
+\hline
+\textbf{tokens}      & 1      & rue        & Maurice     & Arnoux      & ,           & 92120 & Montrouge \\
+\hline
+\textbf{lexiques}  & nombre & type\_voie & $\emptyset$ & $\emptyset$ & $\emptyset$ & code  & ville \\
+\textbf{l/POS}     & nombre & type\_voie & n.p         & n.p         & ponct       & code  & ville \\
+\textbf{l/token}     & 207    & type\_voie & Maurice     & Arnoux      & ,           & code  & ville \\
+\hline
+\end{tabular}
+\caption{Exemple d'utilisation de lexiques pour les adresses}
+\label{tab:ontology-address-example}
+\end{table}
+
+Nous nous concentrerons ici sur la gestion des tokens ambigus dans la source de connaissance, c'est-à-dire ceux qui apparaissent dans au moins deux lexiques différents. Nous évaluons pour cela deux méthodes de gestion de ces ambigüités, lesquelles ne figuraient pas dans les travaux originaux mais qui peuvent causer de grandes différences de résultats, comme nous le verrons dans la section \ref{subsec:taxonomy-ftb-priorities}. Il n'est pas rare qu'un token puisse être ambigu, dans le sens où il apparaît dans plusieurs lexiques. C'est par exemple le cas de « Paris », qui peut référer à une ville (lieu) ou à un prénom (personne). Dans un tel cas, deux possibilités s'offrent à nous. La première consiste à effectuer une analyse ambigüe, où chaque token reconnu par plusieurs lexiques se verra attribuer plusieurs classes. Ce type d'analyse a l'avantage de distinguer les tokens sûrs de ceux ambigus et permet donc à l'algorithme d'effectuer une analyse plus fine, mais elle a également comme inconvénient que les ambigüités peuvent ne pas être observées à l'apprentissage, laissant le système démuni en phase d'annotation. Une seconde approche consiste à établir une relation d'ordre sur les lexiques, notée $>$, avec $x > y$ se décrivant comme « $x$ est plus prioritaire que $y$ ». Prenons deux lexiques $x$ et $y$ ainsi qu'un token $t$ tels que $t \in x \cap y$ et $x > y$. Lorsque nous rencontrons le token $t$ dans notre corpus, ce dernier prendra alors systématiquement la classe associée à $x$. Cela équivaut à supprimer systématiquement l'ensemble des tokens ambigus des lexiques les moins prioritaires. Cette approche a l'avantage de ne laisser aucune ambigüité et de fournir des traits plus simples et moins silencieux au CRF, même si ces derniers sont moins précis. Par la suite, nous appellerons ces connaissances \emph{a priori}, lorsqu'elles sont classées et triées, un \emph{répertoire} de lexiques, dont nous étudierons l'intégration dans un CRF. Un exemple de différence entre une analyse désambiguisée et une analyse ambigüe selon un \emph{répertoire} est donné dans le tableau \ref{tab:directory-disamb-vs-ambiguous}.
+
+La gestion de la priorité à l'échelle des lexiques peut être améliorée. Un traitement plus efficace pour une approche non-abmigüe serait de prendre chaque token ambigu et de le supprimer manuellement des lexiques les moins intéressants. Lorsque les lexiques sont grands et comprennent de nombreuses ambiguïtés, cette approche peut par contre s'avérer fastidieuse. Une première façon d'accélérer le processus serait de se référer aux entités du corpus d'apprentissage afin de décider du lexique à attribuer à une entrée ambigüe. Nous pourrions choisir le lexique correspondant à la classe la plus fréquemment attribuée à un token dans le corpus d'apprentissage. Cette approche n'a pas encore été essayée, mais elle figure parmi nos perpectives de recherche.
+
+\begin{table}[ht!]
+\centering
+\footnotesize
+\begin{tabular}{|c|cccccccc|}
+\hline
+\textbf{tokens}         & la          & société         & Warner       & fondée          & par         & les         & frères      & Warner \\
+\hline
+\textbf{désambig.} & $\emptyset$ & $\emptyset$ & last-name    & $\emptyset$     & $\emptyset$ & $\emptyset$ & $\emptyset$ & last-name \\
+\textbf{ambigüe}      & $\emptyset$ & $\emptyset$ & company/last-name    & $\emptyset$     & $\emptyset$ & $\emptyset$ & $\emptyset$ & company/last-name \\
+\hline
+\end{tabular}
+\caption{Exemple d'utilisation d'un répertoire de lexique, de manière désambiguisé ou ambigüe.}
+\label{tab:directory-disamb-vs-ambiguous}
+\end{table}
+
+Un exemple de types de lexiques triés pour la REN est donné dans la figure \ref{fig:NER-taxonomy} et un pour les adresses est donné dans la figure \ref{fig:address-taxonomy}. La clasification utilisée pour la REN sur le FTB est donnée dans la figure \ref{fig:ftb-directory}. Nous avons également utilisé la classification des verbes de \citet{dubois1997synonymie}, qui définit en fait deux classifications des verbes différentes : une générique (communication, don/privation, auxiliaires, etc…) et une sémantique (humain, animé, non-animé, etc…). Nous n'avons pas obtenu de meilleurs résultats en intégrant cette classification dans le \emph{répertoire}, raison pour laquelle elle n'y figure pas.
+
+\begin{figure}[ht!]
+\centering
+\begin{forest}
+[REN
+  [personne
+    [titre]
+    [pr\'{e}nom]
+    [nom-de-famille]
+    [...]
+  ]
+  [lieu
+    [pays]
+    [ville]
+    [...]
+  ]
+  [verbes
+    [action
+        [mouvement]
+        [parole]
+        [...]
+    ]
+    [auxilliaire]
+    [\'{e}tat]
+  ]
+  [...]
+]
+\end{forest}
+\caption{exemple de taxonomie pour la REN}
+\label{fig:NER-taxonomy}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\begin{forest}
+[adresse
+  [nombre
+    [code postal]
+  ]
+  [type-voie]
+  [ville]
+  [pays]
+  [sous-élément]
+  [autres]
+]
+\end{forest}
+\caption{exemple de répertoire pour les addresses}
+\label{fig:address-taxonomy}
+\end{figure}
+
+Dans les sections suivantes, nous appliquerons les répertoires avec ce type de traits sur deux corpus distincts : le French Treebank (FTB) ainsi que sur le corpus d'adresses postales américaines de \citet{yu2007high}.
+
+\end{document}

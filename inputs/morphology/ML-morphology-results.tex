@@ -1,0 +1,73 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Les résultats présentés ici sont ceux obtenus par les différents systèmes d'apprentissage automatique intégrant la reconnaissance de la morphologie de manière automatique. Nous comparons ici trois systèmes principaux. Le premier utilise les affixes générés selon la méthode décrite en section \ref{sec:morphology-extraction}. Le deuxième utilise un segmenteur appris avec Morfessor sur l'ensemble d'apprentissage. Le dernier utilise l'ensemble des sous-chaînes infixes du token et des préfixes et suffixes d'une taille 1 à 7.
+
+Pour le CRF intégrant Morfessor, nous avons calculé sur l'ensemble d'entrainement le token ayant le plus grand nombre de segments, ce dernier en avait 48. Nous avons donc, dans Wapiti, généré 48 colonnes (au même format que le tableau \ref{tab:CRF-input-tabular}), chacune étant le segment trouvé par Morfessor, ou "\#\#" s'il n'y avait plus de segments. Nous avons ensuite utilisé Wapiti pour effectuer l'apprentissage, mais l'avons modifié afin qu'il ne génère pas les observations égales à "\#\#". De cette manière, nous avons pu simuler dans wapiti l'utilisation de traits multi-valués. La séquence "\#\#" faisant office d'élément de substitution, sa suppression n'affecte pas négativement le modèle.
+
+Pour le CRF intégrant l'ensemble des sous-chaînes, nous avons utilisé CRFsuite en le configurant afin qu'il génère des modèles les plus proches possibles de ceux générés par Wapiti.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|l|ccc|}
+\cline{2-4}
+\multicolumn{1}{l|}{}   & précision      & rappel         & f-mesure \\
+\hline
+baseline                & 86.76          & 74.30          & 80.05 \\
+affixes                 & 89.80          & 74.67          & 81.54 \\
+\hline
+CRF morfessor           & \textbf{89.89} & 74.14          & 81.26 \\
+\hline
+CRF sous-chaînes [0]     & 86.01          & 77.67          & 81.62 \\
+CRF sous-chaînes [-1..1] & 87.30          & \textbf{78.40} & \textbf{82.61} \\
+CRF sous-chaînes [-2..2] & 86.84          & 77.40          & 81.85 \\
+\hline
+\end{tabular}
+\caption{résultats globaux sur les expériences menées avec Morfessor et un CRF ayant l'ensemble des sous-chaînes d'un token}
+\label{tab:ML-morpho-PRF}
+\end{table}
+
+Les résultats de cette expérience sont détaillés dans le tableau \ref{tab:ML-morpho-PRF}. Nous remarquons tout d'abord que peu importe la méthode utilisée, nous avons pu améliorer de manière significative notre baseline. Le meilleur résultat que nous avons obtenu a été avec le CRF utilisant l'ensemble des sous-chaînes. Nous avons considérablement amélioré notre rappel par rapport aux expériences précédentes. Cela illustre bien la force principale des affixes à donner des informations pertinentes, mais qui manque d'une puissance de généralisation. Cela nous conforte dans l'idée de les utiliser sur de larges dictionnaires, d'où nous pourrions en extraire plus de traits utiles. L'utilisation d'un grand volume des données traitées permettrait de générer un plus grand ensemble d'affixes qui serait par la même occasion plus couvrant, corrigeant (au moins en partie) le problème de rappel des affixes générés.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|l|ccc|}
+\cline{2-4}
+\multicolumn{1}{l|}{}      & connues        & inconnues      & global \\
+\hline
+baseline                   & 93.72          & 56.30          & 80.05 \\
+affixes                    & 95.1           & 56.65          & 81.54 \\
+morfessor                  & 94.43          & 57.27          & 81.26 \\
+CRF sous-chaînes [-1..1] & \textbf{96.37} & \textbf{57.34} & \textbf{82.61} \\
+\hline
+\end{tabular}
+\caption{f-mesures en fonction de la présence d'une entité dans le corpus d'entrainement sur les différentes expériences menées.}
+\label{tab:ML-morpho-fscores}
+\end{table}
+
+Le tableau \ref{tab:ML-morpho-fscores} montre les f-mesures obtenues par les différents systèmes sur les entités connues et inconnues du corpus d'apprentissage. Nous remarquons que Morfessor, par rapport à notre méthode de recherche d'affixes, a une moins bonne f-mesure sur les entités connues mais une meilleure sur les entités inconnues. Ces résultats confirment le caractère précis des affixes récupérés automatiquement. Morfessor a également l'avantage de donner des informations sur tout le token, aucune sous-séquence n'étant perdue avec le processus de segmentation, ce qui permet d'avoir un éventail plus couvrant de traits. Nous avons trouvé un peu moins de 4000 affixes présents dans le modèle Morfessor qui étaient absents du modèle utilisant les affixes, les dix affixes les plus discriminants sont donnés dans le tableau \ref{tab:only-morfessor}. La majorité des traits présents dans ce tableau sont pertinents. L'utilisation de l'ensemble des sous-chaînes d'un token nous a permis d'obtenir les meilleurs résultats, mais la qualité sur les entités inconnues n'a pas vu un fort gain par rapport à Morfessor. Il semble donc que Morfessor soit un bon choix en termes de traits, ce dernier ayant un apport intéressant sur les entités inconnues et demeure plus léger qu'intégrer l'ensemble des sous-chaînes.
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|}
+\hline
+trait & poids \\
+\hline
+organo & 2.77 \\
+Hg & 2.40 \\
+metabol & 2.31 \\
+osinolates & 2.11 \\
+Xe & 2.11 \\
+sporine & 2.11 \\
+sulfonyl & 2.05 \\
+cellulose & 2.05 \\
+cyanidin & 2.02 \\
+\hline
+\end{tabular}
+\caption{Les 10 traits avec les plus forts poids présents dans le modèle Morfessor, mais absents du modèle utilisant les affixes générés automatiquement}
+\label{tab:only-morfessor}
+\end{table}
+
+Nous avons montré ici un algorithme simple pour extraire les affixes présents à l'intérieur des tokens et avons montré les avantages et les inconvénients de cette méthode par rapport à d'autres dans le cadre de la reconnaissance d'entités nommées chimiques. Notre algorithme peut également s'utiliser pour retrouver des tokens déclencheurs dans les entités nommées, comme cela est montré dans le tableau \ref{tab:keyword-extraction}. Dans la section suivante, nous allons utiliser cet algorithme afin de construire et enrichir des ressources lexicales en générant des listes de tokens déclencheurs que nous intégrerons ensuite à des systèmes de reconnaissance d'entités nommées par apprentissage automatique.
+
+\end{document}

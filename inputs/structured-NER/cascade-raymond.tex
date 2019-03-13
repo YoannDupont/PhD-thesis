@@ -1,0 +1,19 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Le système présenté par \citet{raymond2013robust} a remporté la campagne d'évaluation ETAPE, sur laquelle nous n'avons pas travaillé. Ce système demeure malgré tout intéressant car il constitue à notre connaissance l'état-de-l'art sur le corpus ETAPE. Nous pouvons cependant le voir comme un système de comparaison vu qu'il s'agit d'une cascade de CRF.
+
+Le principe de la "cascade" de CRF présentée par \citet{raymond2013robust} est très simple : chaque composant et chaque entité va être reconnue par un CRF indépendemment, pour un total de 68 CRF différents. Chaque CRF ne reconnait alors que les frontières des classes cibles, il n'a alors que 3 étiquettes : B, I et O (pour \textit{Beginning} \textit{Inside} et \textit{Outside}). Il ne s'agit donc pas véritablement d'une cascade de CRF, chacun étant employé indépendemment les uns des autres.
+
+Les traits utilisés reprennent ceux décrits par \citet{raymond2010reconnaissance}, que nous avons décrits dans la section \ref{subsec:ontology-integration}. Il utilise des n-grammes de taille 3 dans une fenêtre de $[-2,2]$ pour générer ses traits. Il utilise également un algorithme de discrétisation des valeurs numériques, mais son apport dans les résultats n'a pas été donné dans l'article original, qui fonctionne de la façon suivante :
+\begin{enumerate}
+    \item considérer chaque trait numérique de manière indépendante %consider each numeric attribute independently
+    \item induire un arbre de décision binaire basé sur un gain d'information pour prédire l'étiquette à partir de cette information uniquement %induce a binary decision tree based on the information gain (like ID3 or C4.5) to predict labels from this single attribute
+    \item arrêter lorsque le gain d'information est en-dessous d'un seuil fixé défini à l'avance. %stop when the information gain (entropy) of a split is below a threshold computed as shown in figure 5:
+    \item répéter l'opération sur l'ensemble des valeurs numériques %repeat the operation for all numeric attributes
+\end{enumerate}
+
+L'inconvénient de cette méthode est qu'elle n'est pas récursive. Si un composant ou une entité en revouvre un(e) de même type, cette méthode ne sera pas capable de les retrouver. Nous avons cherché dans le corpus ce genre de chevauchements et en avons trouvé environ 300 dans l'ensemble d'apprentissage, soit un peu plus de 1 pour 1000. La figure \ref{fig:quaero-deepest} est un exemple d'un tel chevauchement : en effet, nous avons "côte d'ivoire" et "mouvement patriotique de côte d'ivoire" tous deux annotés avec un composant "name". Les méthodes que nous proposons ici se veulent plus générales et capables d'accepter de telles imbrications.
+
+
+\end{document}

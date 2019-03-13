@@ -1,0 +1,28 @@
+\documentclass[citation\_needed]{subfiles}
+\begin{document}
+
+Un défaut des systèmes par apprentissage vient du fait que l'inférence se fait de façon purement locale, une hypothèse d'indépendance d'une phrase à une autre étant faite afin de rendre le modèle calculable en pratique. Divers travaux ont été effectués afin de modéliser des dépendances non-locales et assurer la consistance des annotations, modélisant en général des dépendances à l'échelle du document et du corpus \citep{krishnan2006effective,ratinov2009design}. La première approche que nous utilisons est une propagation simple : après l'annotation du CRF, nous récupérons l'ensemble des formes correspondant à une entité, nous prenons alors la classe la plus fréquemment attribuée à une forme et réappliquons ce lexique sur l'ensemble de test. Deux heuristiques peuvent alors être employées. La première consiste à n'appliquer ces lexiques que sur des portions non-annotées du texte, celles proposées par le CRF étant considérées comme meilleures de façon systématique. La seconde consiste à ne mettre à jour les annotations du CRF que dans le cas où une chaîne plus longue a été trouvée, aucun retypage des séquences de même taille n'étant effectué. Cette approche a l'avantage d'être très simple à mettre en place et d'être intuitivement sous-optimale : elle permet donc d'établir une baseline des gains obtenables par cette approche.
+
+Nous avons également testé l'approche en deux passes à l'aide des traits \emph{token majority} et \emph{entity majority} tels que décrits dans \citet{krishnan2006effective,mao2007using,ratinov2009design}. Le trait \textit{token majority} considère la classe majoritairement associée à chaque token indépendamment, en ignorant les le schéma BIO. Par exemple, si « Paris » apparaît deux fois en tant qu'organisation et une en tant que lieu, alors le trait \textit{token majority} attribuera la valeur « organisation » à toutes les occurrences de « Paris ». Le trait \textit{entity majority} est analogue à \textit{token majority}, mais considère les entités retrouvées par le premier CRF. Si par exemple « Calvin Klein » a été annoté trois fois en tant qu'entreprise et deux fois en tant que personne, alors toutes les occurences de « Calvin Klein » seront annotées en tant qu'entreprise. Les égalités ont été résolues en utilisant les priorités établies dans la section \ref{subsec:taxonomy-ftb-priorities} et les chevauchement ont été gérés selon la règle de « la première chaine la plus longue ».
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|l|ccc|}
+\hline
+Expérience   & Précision & Rappel & F-mesure \\
+\hline
+CRF          & \textbf{88.41} & 80.03 & 84.05 \\
+heuristique1 & 87.89 & \textbf{82.34} & \textbf{85.02} \\
+heuristique2 & 87.80 & 82.26 & 84.94 \\
+deux passes  & 87.72 & 81.66 & 84.58 \\
+\hline
+\end{tabular}
+\caption{Les résultats selon les différentes méthodes de propagation}
+\label{tab:CRF-propagation}
+\end{table}
+
+Le tableau \ref{tab:CRF-propagation} résume les différents résultats obtenus avec les différentes méthodes de propagation. Nous pouvons remarquer que l'heuristique sans mise à jour des annotations du CRF donne des résultats sensiblement meilleurs que celle pouvant modifier les annotations du CRF. En observant les annotations, nous avons remarqué que cette différence était principalement due à des inconsistances d'annotation dans le gold standard pour certaines organisations, les résultats sur les autres entités étant meilleurs. Nous observons cependant une baisse de précision à l'échelle globale, cela vient des erreurs de bruits et des types ambigus (ex: lieux contre organisations) qui se propagent par cette méthode. L'approche en deux passes telle que décrite dans \citet{krishnan2006effective,mao2007using,ratinov2009design} ne nous a pas offert d'amélioration supplémentaire par rapport à notre post-traitement plus simple.
+
+Depuis quelques années en particulier, les réseaux de neurones sont des concurrents sérieux aux CRF, notamment dans leur variante dite \emph{récurrente}. Ces derniers sont capables de modéliser des dépendances de plus longue distance que les CRF et peuvent intégrer au mieux des résultats d'apprentissage non supervisés sur de larges quantités de données non annotées. Dans la section suivante, nous comparerons le système construit jusqu'ici avec l'une des variantes les plus efficaces de ce genre de réseaux, appelés LSTM-CRF bidirectionnel.
+
+\end{document}

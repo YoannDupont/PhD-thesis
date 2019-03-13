@@ -1,0 +1,105 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Il est courant dans le TAL d'utiliser un ensemble de dictionnaires, appelé connaissances \emph{a priori}, afin d'aider les systèmes par apprentissage à avoir des modèles plus génériques et robustes. Nous appelerons cet ensemble de connaissance, lorsqu'il est organisé de manière hiérarchique, un \emph{répertoire}. Nous appellerons l'ensemble hiérarchisé des classes d'un répertoire sa \emph{taxonomie}. Dans cette section, nous construirons des taxonomies basées sur la tâche en cours. Pour la REN, nous utiliserons les différents types cibles comme premier niveau de hiérarchie. Un exemple de taxonomie pour la REN classique est donnée par la figure \ref{fig:NER-taxonomy}, tandis qu'une taxonomie pour les adresses est donné par la figure \ref{fig:address-taxonomy}.
+
+L'algorithme \ref{alg:extractAffixes} de fouille d'affixes récurrents permet de récupérer des affixes récurrents. Dans le cadre où ces affixes sont des tokens déclencheurs, il peut alors être utilisé sur les séquences de tokens constituant une entité nommées afin d'en extraire les tokens déclencheurs, comme indiqué sur la figure\ \ref{tab:keyword-extraction}. Cet algorithme peut alors être utilisé pour constituer cette liste si elle n'est pas disponible, ou l'enrichir au fur et à mesure que de nouvelles entités sont découvertes.
+
+Considérant qu'un répertoire est un ensemble de dictionnaires classés et triés, il n'est pas rare qu'un token puisse être ambigu, dans le sens où il apparaît dans plusieurs dictionnaires. C'est par exemple le cas de « Paris », qui peut référer à une ville (lieu) ou à un prénom (personne). Dans un tel cas, deux possibilités s'offrent à nous. La première consiste à effectuer une analyse ambigüe, où chaque token reconnu par plusieurs dictionnaires se verra attribuer plusieurs classes. Ce type d'analyse a l'avantage de distinguer les tokens sûrs de ceux ambigus et permet donc à l'algorithme d'effectuer une analyse plus fine, mais elle a également comme inconvénient que les ambigüités peuvent ne pas être observées à l'apprentissage, laissant le système démuni en phase d'annotation. Une seconde approche consiste à établir une relation d'ordre sur les dictionnaires, notée $>$, avec $x > y$ se décrivant comme « $x$ est plus prioritaire que $y$ ». Prenons deux dictionnaires $x$ et $y$ ainsi qu'un token $t$ tels que $t \in x \cap y$ et $x > y$. Lorsque nous recompterons le token $t$ dans notre corpus, ce dernier prendra alors systématiquement la classe associée à $x$. Cette approche a l'avantage de ne laisser aucune ambigüité et de fournir des traits plus simples et moins silencieux au CRF, même si ces derniers sont moins précis.
+
+\begin{figure}
+\centering
+\begin{forest}
+[REN
+  [personne
+    [titre]
+    [pr\'{e}nom]
+    [nom-de-famille]
+    [...]
+  ]
+  [lieu
+    [pays]
+    [ville]
+    [...]
+  ]
+  [verbes
+    [action
+        [mouvement]
+        [parole]
+        [...]
+    ]
+    [auxilliaire]
+    [\'{e}tat]
+  ]
+  [...]
+]
+\end{forest}
+\caption{exemple de taxonomie pour la REN}
+\label{fig:NER-taxonomy}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\begin{forest}
+[adresse
+  [nombre
+    [code postal]
+  ]
+  [voie]
+  [ville]
+  [pays]
+  [sous-élément]
+  [autres]
+]
+\end{forest}
+\caption{exemple de répertoire pour les addresses}
+\label{fig:address-taxonomy}
+\end{figure}
+
+Les traits issus de l'utilisation des « connaissances \emph{a priori} » sont un point important de \cite{raymond2010reconnaissance}, qui nous servira donc de point de départ pour l'intégration de ces dernières dans les système par apprentissage. Nous nous concentrerons sur la gestion des tokens ambigus dans la source de connaissance, c'est-à-dire ceux qui apparaissent dans au moins deux dictionnaires différents. Nous évaluons pour cela deux méthodes de gestion de ces ambigüités, qui ne figuraient pas dans les travaux originaux mais qui peut causer de grandes différences de résultats, comme nous le verrons dans la section \ref{subsec:priority-and-ambiguity}. Nous appellerons ces connaissances \emph{a priori}, lorsqu'elles sont classées et triées, un répertoire, dont nous étudierons l'intégration dans un CRF.
+
+Les traits énoncés par \citet{raymond2010reconnaissance} sont en fait la combinaison de plusieurs éléments, qu'on peut rapprocher des motifs décrits par \citet{holatfouille}, générés en trois étapes.
+\begin{enumerate}
+    \item Une connaissance \emph{a priori} est appliquée (ici, le répertoire)
+    \item Les tokens dits « importants » (qui ont une forte information mutuelle avec une classe de sortie) sont laissés tels quels
+    \item La partie du discours (\emph{Part Of Speech}, POS) est utilisée pour les tokens non reconnus dans les deux étapes précédentes
+\end{enumerate}
+
+Nous avons légèrement modifié ces traits ici : à la place des tokens importants, nous avons créé des listes de tokens déclencheurs pour chaque type d'entité principal. Ces listes ont été constituées manuellement et enrichie à l'aide de noms communs récupérés dans le contexte proche des entités dans l'ensemble d'entrainement. L'inconvénient des tokens importants est que seule leur forme de surface est utilisée, ce qui pose deux problèmes. Premièrement cette liste est figée et toute modification impose de réapprendre le modèle, alors qu'un token déclencheur peut simplement être ajouté à la liste correspondante. De plus, il n'est pas garanti que l'ensemble des tokens importants présents dans l'ensemble d'apprentissage soit exhaustif. Si un token important est absent du corpus d'apprentissage, les CRF seront incapables de l'utiliser pendant l'annotation. À l'inverse, les tokens absents des dictionnaires peuvent être rajoutés au fur et à mesure, donnant aux CRF des informations qu'ils peuvent utiliser.
+
+Le tableau \ref{tab:ontology-company-vs-person} présente des traits générés par la procédure précédente. Les lignes commençant par « l/X » signifient que « X » a été utilisé à l'étape 3. décrite précédemment. Nous voulions évaluer l'utilisation de deux ressources en plus des POS, l'une plus précise — les tokens — et l'autre plus générale — le chunking \citep{Abney91}. Les chunks sont des séquences continues et non-récursives d'éléments linguistiques ayant une unique tête forte. Les informations de chunking contiennent des groupes nominaux, prépositionnels, adverbiaux, adjectivaux et les noyaux verbaux\footnote{un guide d'annotation pour les chunks est disponible à l'adresse : \url{http://www.lattice.cnrs.fr/sites/itellier/guide.html}}. Les chunks n'étant pas disponibles directement, nous avons appliqué le chunker de SEM \citep{Tellier12,tellier2012segmenteur}, appris sur le FTB\footnote{les chunks de références ont été perdus et le corpus doit encore être reconstitué au moment de l'écriture de ces lignes.}. L'intuition est que les tokens permettent d'avoir des contextes plus forts, tandis que le chunking permet une plus grande généralisation — les entités nommées correspondant généralement à des chunks nominaux ou prépositionnels.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|c|cccccccc|}
+\hline
+\textbf{tokens}      & la          & société         & Warner    & fondée      & par         & les         & frères      & Warner \\
+\hline
+\textbf{répertoire} & $\emptyset$ & company.trigger & last-name & $\emptyset$ & $\emptyset$ & $\emptyset$ & $\emptyset$ & last-name \\
+\textbf{l/tokens}    & la          & company.trigger & last-name & fondée      & par         & les         & frères      & last-name \\
+\textbf{l/POS}     & DT          & company.trigger & last-name & ADJ         & PRP         & DET         & NC          & last-name \\
+\textbf{l/chunks}  & NP          & company.trigger & last-name & AP          & B-PP        & I-PP        & I-PP        & last-name \\
+\hline
+\end{tabular}
+\caption{Exemple de traits générés depuis un répertoire.}
+\label{tab:ontology-company-vs-person}
+\end{table}
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|c|ccccccc|}
+\hline
+\textbf{tokens}      & 207    & rue        & de          & Bercy       & ,           & 75012 & Paris \\
+\hline
+\textbf{répertoire} & nombre & type\_voie & $\emptyset$ & $\emptyset$ & $\emptyset$ & code  & ville \\
+\textbf{l/POS}     & nombre & type\_voie & dét         & n.p         & ponct       & code  & ville \\
+\textbf{l/token}     & 207    & type\_voie & de          & Bercy       & ,           & code  & ville \\
+\hline
+\end{tabular}
+\caption{Exemple d'utilisation de répertoire pour les adresses}
+\label{tab:taxonomy-address-example}
+\end{table}
+
+Dans les sections suivantes, nous appliquerons les répertoires avec ce type de traits sur deux corpus distincts : le French Treebank (FTB) ainsi que sur le corpus d'adresses postales américaines de \citet{yu2007high}.
+
+\end{document}

@@ -1,0 +1,667 @@
+\documentclass[12pt,a4paper,times,twoside,openright]{report}
+
+%=============================================================================%
+%                                   imports                                   %
+%=============================================================================%
+
+\usepackage[french]{babel}
+\usepackage{minitoc}
+% formatting
+\usepackage{geometry}
+\geometry{
+    left=25mm,
+    right=25mm,
+    top=15mm,
+    bottom=20mm
+}
+\usepackage{setspace}
+\linespread{1.5}
+
+\usepackage{macros}
+
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage[many]{tcolorbox}
+
+\usepackage{footnote}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{breakurl}
+\hypersetup{
+    colorlinks=true,
+    citecolor=orange,
+    linkcolor=teal,
+    urlcolor=purple
+}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{pifont}
+
+\usepackage{amsthm}
+\newtheorem{definition}{D\'{e}finition}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage{tikz}
+\usepackage{tikz-qtree}
+\usepackage{tkz-graph}
+\usepackage{tikz-dependency}
+\usetikzlibrary{positioning,chains,fit,shapes,calc}
+\usepackage{pstricks-add}
+\usetikzlibrary{arrows,automata}
+\usetikzlibrary{shapes}
+
+\usepackage{forest}
+
+\usepackage{pgfplots, pgfplotstable}
+
+\usepackage{natbib}
+
+\newenvironment{helvetica}{\fontfamily{ppl}\selectfont}{\par}
+
+\newcommand{\ftextnumero}{{\fontfamily{txr}\selectfont \textnumero}}
+
+%
+% embed XML
+%
+\usepackage{listings}
+\lstdefinelanguage{XML}
+{
+  basicstyle=\ttfamily\footnotesize,
+  morestring=[s]{"}{"},
+  morecomment=[s]{?}{?},
+  morecomment=[s]{!--}{--},
+  moredelim=[s][\color{black}]{>}{<},
+  moredelim=[s][\color{black}]{</}{>},
+  commentstyle=\color{green!60!black},
+  stringstyle=\color{blue},
+  identifierstyle=\bfseries\color{brown}
+}
+
+%
+% folder picture for directory trees: http://tex.stackexchange.com/questions/5073/making-a-simple-directory-tree
+%
+\definecolor{folderbg}{RGB}{124,166,198}
+\definecolor{folderborder}{RGB}{110,144,169}
+\def\Size{4pt}
+\tikzset{
+  folder/.pic={
+    \filldraw[draw=folderborder,top color=folderbg!50,bottom color=folderbg]
+      (-1.05*\Size,0.2\Size+5pt) rectangle ++(.75*\Size,-0.2\Size-5pt);  
+    \filldraw[draw=folderborder,top color=folderbg!50,bottom color=folderbg]
+      (-1.15*\Size,-\Size) rectangle (1.15*\Size,\Size);
+  }
+}
+
+%
+% front page
+%
+\usepackage{eso-pic}
+    \newcommand\BackgroundPic{%
+        \put(0,0){%
+            \parbox[b][\paperheight]{\paperwidth}{%
+                \vfill
+                \centering
+                \includegraphics[width=\paperwidth,height=\paperheight,keepaspectratio]{images/borders/celtic-border2}%
+                \vfill
+            }
+        }
+    }
+
+\title{
+{La structuration dans les entités nommées}\\
+{\large Laboratoire Lattice, UMR 8094, 1 rue Maurice Arnoux, 92120 Montrouge\\
+Expert System France, 207 rue de Bercy, 75012 Paris\\
+Université Sorbonne Nouvelle Paris 3, 13 rue de Santeuil, 75013 Paris}\\
+}
+\author{Yoann Dupont}
+\date{}
+
+%=============================================================================%
+%                          beginning of the document                          %
+%=============================================================================%
+
+\begin{document}
+
+%\maketitle
+\begin{titlepage}
+%\AddToShipoutPicture*{\BackgroundPic}
+\begin{center}
+
+{\setstretch{1.0} \textsc{\large Thèse de doctorat CIFRE\\de\\l'Université Sorbonne Paris Cité\\préparée à\\l'Université Sorbonne Nouvelle - Paris 3\\et\\Expert System France}}\\
+
+\vspace{2.0em}
+
+\textsc{École doctorale N$^{\circ}$268, Langage et Langues}\\
+\textsc{Spécialité du doctorat : Sciences du Langage}\\
+
+\vspace{1.0em}
+
+\rule{1.0\textwidth}{.4pt} \\ % Horizontal line
+\vspace{-1.0em}
+{\huge \bfseries La structuration\\dans les entités nommées}\\ % Thesis title
+\rule{1.0\textwidth}{.4pt} \\ % Horizontal line
+
+\vspace{1.0em}
+
+\begin{flushleft} \large par \textbf{Yoann Dupont}\end{flushleft}
+\begin{flushleft} \large sous la direction de \textbf{Isabelle TELLIER}\end{flushleft}
+
+\vspace{0.8em}
+
+\begin{footnotesize}
+\begin{flushleft}
+\textbf{composition du jury :}\\
+{Agata Savary, maîtresse de conférences HDR (Université François Rabelais Tours, IUT de Blois), Rapporteure,}\\
+{François Yvon, professeur des universités (Université Paris Sud), chercheur (LIMSI/CNRS), Rapporteur,}\\
+{Isabelle Tellier, professeure des universités (Université Sorbonne Nouvelle Paris 3), Directrice de thèse,}\\
+{Christian Lautier, architecte logiciel, Expert System France, Encadrant de thèse,}\\
+{Marco Dinarelli, chargé de recherche, Laboratoire Lattice, Co-encadrant de thèse,}\\
+{Pascale Sebillot, professeur des universités, IRISA / INSA de Rennes, Examinatrice,}\\
+{Patrick Watrin, logisticien de recherche, Université catholique de Louvain, Examinateur.}\\
+\end{flushleft}
+\end{footnotesize}
+
+\vspace{-7.5em}
+%==============================================================================
+\begin{picture}(0,0)
+\put(-100,-165){\hbox{\includegraphics[scale=0.2]{images/logos/lattice}}}
+\end{picture}
+%------------------------------------------------------------------------------
+\begin{picture}(0,0)
+\put(30,-165){\hbox{\includegraphics[scale=0.3]{images/logos/LOGO-EXPERT-SYSTEM-RGB}}}
+\end{picture}
+%------------------------------------------------------------------------------
+%------------------------------------------------------------------------------
+\begin{picture}(0,0)
+\put(-185,-240){\hbox{\includegraphics[scale=0.3]{images/logos/logo_p3}}}
+\end{picture}
+%------------------------------------------------------------------------------
+\begin{picture}(0,0)
+\put(-95,-240){\hbox{\includegraphics[scale=0.3]{images/logos/CNRSfilaire-grand}}}
+\end{picture}
+%------------------------------------------------------------------------------
+\begin{picture}(0,0)
+\put(-30,-240){\hbox{\includegraphics[scale=0.3]{images/logos/logo_ens}}}
+\end{picture}
+%------------------------------------------------------------------------------
+\begin{picture}(0,0)
+\put(30,-245){\hbox{\includegraphics[scale=0.06]{images/logos/Logo_Sorbonne_Paris_Cite}}}
+\end{picture}
+%------------------------------------------------------------------------------
+\begin{picture}(0,0)
+\put(95,-230){\hbox{\includegraphics[scale=0.5]{images/logos/logo_psl_typocera_indigo_rvb}}}
+\end{picture}
+%==============================================================================
+
+\end{center}
+
+\end{titlepage}
+
+\chapter*{Dédicace}
+\subfile{inputs/dedicace}
+
+\chapter*{Résumé}
+\section*{La structuration dans les entités nommées}
+\subfile{inputs/abstract-fr}
+
+\chapter*{Abstract}
+\section*{Structuration in Named Entities}
+\subfile{inputs/abstract-en}
+
+\chapter*{Remerciements}
+\subfile{inputs/remerciements}
+
+\dominitoc
+\tableofcontents
+
+\chapter{Introduction}
+\label{chap:introduction}
+\minitoc
+\subfile{inputs/introduction/introduction}
+    
+    \section{Traitement automatiques des langues (TAL)}
+    \label{sec:NLP}
+    \subfile{inputs/introduction/NLP}
+    
+    \section{L'extraction d'information}
+    \label{sec:EI-introduction}
+    \subfile{inputs/introduction/EI}
+    
+    \section{Les entités nommées}
+    \label{sec:NE-introduction}
+    \subfile{inputs/introduction/NE}
+
+\chapter{Corpus d'entités nommées}
+\label{chap:NER-corpus}
+\minitoc
+\subfile{inputs/NER-corpora/introduction}
+    
+    \section{Construction d'un corpus en entités nommées}
+    \label{sec:ne-corpus-constitution}
+    
+    Dans cette section, nous présenterons brièvement le processus de création d'un corpus annoté dans l'optique d'une application en TAL. Nous détaillerons d'abord un aperçu général du processus d'annotation, puis nous détaillerons le calcul d'un indice de la qualité d'une annotation, l'accord inter-annotateurs et finalement nous verrons comment les données doivent être partitionnées pour que des outils de TAL puissent être évalués sur un corpus annoté.
+    
+        \subsection{Aperçu général du processus d'annotation}
+        \label{subsec:corpora-overview}
+        \subfile{inputs/NER-corpora/overview}
+    
+        \subsection{Accord inter-annotateurs}
+        \label{subsec:inter-annotator-agreement}
+        \subfile{inputs/NER-corpora/inter-annotator-agreement}
+        
+        \subsection{Partitionnement des données}
+        \label{subsec:data-partition}
+        \subfile{inputs/NER-corpora/partition}
+    
+    \section{Corpus d'entités nommées}
+    \label{sec:named-entity-corpora}
+    
+        \subsection{CHEMDNER}
+        \label{subsec:corpus-CHEMDNER}
+        \subfile{inputs/NER-corpora/CHEMDNER}
+        
+        \subsection{GENIA}
+        \label{subsec:corpus-Genia}
+        \subfile{inputs/NER-corpora/Genia}
+        
+        \subsection{SEM Eval 2007 tâche 9}
+        \label{subsec:corpus-semeval2007}
+        \subfile{inputs/NER-corpora/semeval2007}
+        
+        \subsection{French Treebank (FTB)}
+        \label{subsec:corpus-FTB}
+        \subfile{inputs/NER-corpora/FTB}
+        
+        \subsection{Le corpus d'adresses de \citet{yu2007high}}
+        \label{subsec:corpus-addresses}
+        \subfile{inputs/NER-corpora/addresses}
+        
+        \subsection{Quaero}
+        \label{subsec:corpus-quaero}
+        \subfile{inputs/NER-corpora/quaero}
+        
+        %\subsection{Autres corpus}
+        %voir la discussion "tree structured named entity corpora" sur corpora-list.
+    
+    \section{Conclusion}
+    \label{sec:corpus-conclusion}
+    \subfile{inputs/NER-corpora/conclusion}
+
+\chapter{Reconnaissance des entités nommées}
+\label{chap:NER}
+\minitoc
+    
+    \subfile{inputs/NER/introduction}
+    
+    \section{Métriques de qualité}
+    \label{sec:NER-quality-measurement}
+    \subfile{inputs/NER/quality-measurement}
+    
+    \section{Systèmes à base de règles}
+    \label{sec:rule-based-systems}
+    
+        \subsection{Les outils \Luxid}
+        \label{subsec:Luxid}
+        \subfile{inputs/NER/temis}
+            \subsubsection{TM360}
+            \label{subsubsec:TM360}
+            \subfile{inputs/NER/TM360}
+        
+        \subsection{\ESSEX\ (\ExpertSystem)}
+        \subfile{inputs/NER/essex}
+        
+        \subsection{CasEN}
+        \subfile{inputs/NER/CasEN}
+        
+        \subsection{Perspectives}
+        \subfile{inputs/NER/perspectives}
+    
+    \section{Apprentissage automatique}
+    \label{sec:machine-learning}
+    \subfile{inputs/NER/machine-learning}
+        
+        \subsection{Modèles génératifs et modèles discriminants}
+        \label{subsec:generative-vs-discriminative}
+        \subfile{inputs/NER/generative-vs-discriminative}
+        
+        \subsection{CRF}
+        \label{subsec:CRFs}
+        
+            \subsubsection{Présentation}
+            \label{subsubsec:CRFs-introduction}
+            \subfile{inputs/NER/CRFs/introduction}
+            
+            \subsubsection{Modélisation}
+            \label{subsubsec:CRFs-modelisation}
+            \subfile{inputs/NER/CRFs/modelisation}
+        
+            \subsubsection{Apprentissage}
+            \label{subsubsec:CRFs-training}
+            \subfile{inputs/NER/CRFs/training}
+        
+        \subsection{SEM}
+        \label{subsec:SEM}
+        \subfile{inputs/NER/SEM}
+        
+        \subsection{Réseaux de neurones et deep learning}
+        \label{subsec:NNs}
+        \subfile{inputs/NER/NNs/introduction}
+        
+            \subsubsection{Représentation des données}
+            \label{subsubsec:nn-embeddings}
+            \subfile{inputs/NER/NNs/embeddings}
+        
+            \subsubsection{Préapprentissage de représentations}
+            \label{subsubsec:word2vec}
+            \subfile{inputs/NER/NNs/word2vec}
+        
+            \subsubsection{Les réseaux de neurones à convolution (CNN)}
+            \label{subsubsec:CNNs}
+            \subfile{inputs/NER/NNs/CNNs}
+            
+            \subsubsection{Les réseaux Long Short-Term Memory (LSTM)}
+            \label{subsubsec:LSTMs}
+            \subfile{inputs/NER/NNs/LSTMs}
+            
+            \subsubsection{Les Label-Dependencies aware Recurrent Neural Networks (LD-RNN)}
+            \label{subsubsec:LD-RNN}
+            \subfile{inputs/NER/NNs/LD-RNN}
+        
+            \subsubsection{Les systèmes combinés}
+            \label{subsubsec:NN-combinations}
+            \subfile{inputs/NER/NNs/combinations}
+    
+    \section{Comparaison sur le French Treebank}
+    \label{sec:ftb-comparo}
+    \subfile{inputs/NER/ftb-comparo}
+    
+        \subsection{Analyse des erreurs}
+        \label{subsec:ftb-comparo-errors}
+        \subfile{inputs/NER/ftb-comparo-errors}
+    
+    \section{Conclusion}
+    \label{sec:overview-conclusion}
+    \subfile{inputs/NER/conclusion}
+
+
+\chapter{Structuration "morphologique" des entités nommées}
+\label{chap:morphology}
+\minitoc
+\subfile{inputs/morphology/introduction}
+    
+    \section{Extraction de morphologie}
+    \label{sec:morphology-extraction}
+    \subfile{inputs/morphology/extraction}
+
+        \subsection{Algorithme}
+        \label{subsec:morphology-extraction-algorithm}
+        \subfile{inputs/morphology/extraction-algorithm}
+        
+        \subsection{Séléction et Ordonnancement}
+        \label{subsec:morphology-tree-ordering}
+        \subfile{inputs/morphology/tree-ordering}
+        
+        \subsection{Résultats expérimentaux}
+        \label{subsec:morphology-mined-affixes-results}
+        \subfile{inputs/morphology/mined-affixes-results}
+
+        \subsection{Analyse des erreurs}
+        \label{subsec:morphology-error-analysis}
+        \subfile{inputs/morphology/error-analysis}
+
+        \subsection{Conclusion intermédiaire}
+        \label{subsec:morphology-conclusion}
+        \subfile{inputs/morphology/intermidiate-conclusion}
+    
+    \section{Morphologie par apprentissage automatique}
+    \label{sec:ML-morphology}
+    \subfile{inputs/morphology/ML-morphology}
+        
+        \subsection{Morfessor}
+        \label{subsec:morfessor}
+        \subfile{inputs/morphology/morfessor}
+        
+        \subsection{Intégration dans un CRF}
+        \label{subsec:CRF-morphology}
+        \subfile{inputs/morphology/CRF-morphology}
+        
+        \subsection{Résultats}
+        \label{subsec:ML-morphology-results}
+        \subfile{inputs/morphology/ML-morphology-results}
+    
+    \section{Extraction de tokens déclencheurs}
+    \label{sec:keyword-extraction}
+    \subfile{inputs/morphology/keyword-extraction}
+
+        \subsection{Intégration dans un système par apprentissage}
+        \label{subsec:ontology-integration}
+        \subfile{inputs/morphology/ontology-integration}
+
+    \section{Application au FTB pour créer un système état-de-l'art}
+    \label{sec:taxonomy-ftb}
+    \subfile{inputs/morphology/ontology-ftb}
+
+        \subsection{Gestion de l'ambigüité des lexiques}
+        \label{subsec:taxonomy-ftb-priorities}
+        \subfile{inputs/morphology/ontology-ftb/priorities}
+
+        \subsection{Utilisation des tokens inconnus}
+        \label{subsec:taxonomy-ftb-unknown}
+        \subfile{inputs/morphology/ontology-ftb/unknown}
+
+        \subsection{Consistance des annotations}
+        \label{subsec:taxonomy-ftb-consistency}
+        \subfile{inputs/morphology/ontology-ftb/consistency}
+
+        \subsection{Comparaison avec Bi-LSTM-CRF}
+        \label{subsec:taxonomy-ftb-lstm}
+        \subfile{inputs/morphology/ontology-ftb/lstm}
+
+    \section{Application aux adresses}
+    \label{sec:ontology-addresses}
+    \subfile{inputs/morphology/ontology-addresses}
+    
+    \section{Conclusion}
+    \label{sec:morphology-chapter-conclusion}
+    \subfile{inputs/morphology/chapter-conclusion}
+    
+
+\chapter{Structuration des entités nommées}
+\label{chap:structured-NER}
+\minitoc
+    
+    \subfile{inputs/structured-NER/introduction}
+    
+    \section{Campagne d'évaluation Quaero}
+    \label{sec:quaero-campaign}
+    \subfile{inputs/structured-NER/quaero-campaign}
+    
+        \subsection{Cascade de systèmes CRF + PCFG}
+        \label{subsec:cascade-marco}
+        \subfile{inputs/structured-NER/cascade-marco}
+    
+        \subsection{"Cascade" de CRF}
+        \label{subsec:cascade-raymond}
+        \subfile{inputs/structured-NER/cascade-raymond}
+    
+    \section{Cascade d'annotations}
+    \label{sec:annotation-cascade}
+    \subfile{inputs/structured-NER/annotation-cascade}
+    
+        \subsection{Cascade "kickstart" (CRF)}
+        \label{subsec:kickstart-parsing}
+        \subfile{inputs/structured-NER/kickstart-parsing}
+    
+        \subsection{Cascade "bootstrap" (NN)}
+        \label{subsec:bootstrap-parsing}
+        \subfile{inputs/structured-NER/bootstrap-parsing}
+    
+        \subsection{Résultats}
+        \label{subsec:cascades-results}
+        \subfile{inputs/structured-NER/cascades-results}
+    
+    \section{Résultats sur Quaero v2}
+    \label{sec:quaero-v2-results}
+    \subfile{inputs/structured-NER/quaero-v2-results}
+    
+        \subsection{Analyse des erreurs}
+        \label{subsec:cascades-error-analysis}
+        \subfile{inputs/structured-NER/cascades-error-analysis}
+        
+    \subsection{Conclusion}
+    \label{sec:cascade-conclusion}
+    \subfile{inputs/structured-NER/conclusion}
+
+
+
+\chapter{Conclusion et Perspectives}
+\label{chap:conclusion-and-perspectives}
+
+Les travaux présentés dans cette thèse entrent dans le cadre de la reconnaissance des entités nommées (REN), qui s'inscrit dans le domaine du traitement automatique des langues (TAL). La REN est un domaine capital du TAL, au début de nombreux traitements du domaine de la sémantique. Elle sert à l'extraction de relations entre entités nommées, ce qui permet la construction d'une base de connaissance \citep{surdeanu2014overview,rahman2017tac}, l'extraction d'évènements \citep{kumaran2004text}, le résumé automatique \citep{nobata2002summarization,spitz2016terms} ou encore à la conception d'agents conversationnels \citep{cahn2017chatbot}. Nous avons développé diverses approches ici en recourant à deux technologies concurrentes, à savoir les CRF et les réseaux de neurones, que nous avons comparées entre elles.
+
+Dans la section suivante nous présenterons un bilan de nos travaux qui ont porté sur la reconnaissance d'entités nommées structurées, avant d'offrir des perspectives à nos recherches.
+
+\section{Conclusion}
+\label{sec:phd-conclusion}
+\subfile{inputs/conclusion/phd-conclusion}
+
+
+\section{Perspectives}
+    
+    \subsection{SEM}
+    \label{subsec:perspectives-SEM}
+    \subfile{inputs/perspectives/SEM}
+    
+    \subsection{Active learning}
+    \label{subsec:perspectives-active-learning}
+    \subfile{inputs/perspectives/active-learning}
+
+    \subsection{Plus loin que les entités : relations et base de connaissance}
+    \subfile{inputs/NE-relations/introduction}
+        
+        \subsubsection{Extraction de relations entre entités nommées}
+        \subfile{inputs/NE-relations/relation-extraction}
+        
+        \subsubsection{Supervision distante pour l'extraction de relations}
+        \label{subsec:multir-distant-supervision}
+        \subfile{inputs/NE-relations/distant-supervision}
+        
+        \subsubsection{Multir pour l'extraction de relations}
+        \label{subsec:imm-multir}
+        \subfile{inputs/NE-relations/imm-multir}
+            
+            \subfile{inputs/NE-relations/imm-contextual-features}
+            
+        \subsubsection{TAC KBP}
+        \label{sec:tac-kbp}
+        \subfile{inputs/NE-relations/tac-kbp}
+        
+            \subfile{inputs/NE-relations/distant-corpus}
+            \subfile{inputs/NE-relations/imm-results}
+
+        \subsection{Conclusion}
+        \label{sec:imm-conclusion}
+        \subfile{inputs/NE-relations/imm-conclusion}
+
+\chapter*{Liste des publications}
+    
+    \section*{Publications au cours de la thèse}
+    
+    DINARELLI, Marco et DUPONT, Yoann. \textbf{Modélisation de dépendances entre étiquettes dans les réseaux neuronaux récurrents}. In : Revue TAL. 2017, vol. 58, no 1. \textit{(accepté)}
+    
+    DUPONT, Yoann. \textbf{Exploration de traits pour la reconnaissance d’entités nommées du Français par apprentissage automatique (\textcolor{red}{Prix du meilleur article RECITAL 2017})}. In : TALN-RECITAL. 2017.\\
+    \url{http://taln2017.cnrs.fr/wp-content/uploads/2017/06/actes_RECITAL_2017-Final.pdf#page=52}
+    
+    DUPONT, Yoann, DINARELLI, Marco et TELLIER, Isabelle. \textbf{Réseaux neuronaux profonds pour l’étiquetage de séquences}. In : TALN-RECITAL. 2017.\\
+    \url{http://taln2017.cnrs.fr/wp-content/uploads/2017/06/actes_TALN_2017-vol2Final.pdf#page=31}
+    
+    DUPONT, Yoann, DINARELLI, Marco, TELLIER, Isabelle and LAUTIER, Christian. \textbf{Structured Named Entity Recognition by Cascading CRFs}. In : CICling. 2017.\\
+    \url{http://www.marcodinarelli.it/publications/2017_CICling_CRFCascade.pdf}
+    
+    DUPONT, Yoann, DINARELLI, Marco and TELLIER, Isabelle. \textbf{Label-Dependencies Aware Recurrent Neural Networks (\textcolor{red}{Prix du meilleur programme CICling 2017})}. In : CICling. 2017.\\
+    \url{http://www.marcodinarelli.it/publications/2017_CICling_CRFCascade.pdf}
+    
+    DUPONT, Yoann, TELLIER, Isabelle, LAUTIER, Christian, et DINARELLI, Marco. \textbf{Extraction automatique d'affixes pour la reconnaissance d'entités nommées chimiques}. In : EGC. 2016.\\
+    \url{https://hal.archives-ouvertes.fr/hal-01476792/document}
+    
+    
+    
+    \section*{Publications antérieures à la thèse}
+    
+    TELLIER, Isabelle, MAKHLOUF, Zineb and DUPONT, Yoann. \textbf{Sequential Patterns of POS Labels Help to Characterize Language Acquisition}. In : DMNLP @ PKDD/ECML. 2014. p. 129-142.\\
+    \url{https://hal.archives-ouvertes.fr/hal-01140542/document}
+    
+    MAKHLOUF, Zineb, DUPONT, Yoann, and TELLIER, Isabelle. \textbf{Caractériser l'acquisition d'une langue avec des patrons d'étiquettes morpho-syntaxiques}. In : JADT. 2014.\\
+    \url{https://hal.archives-ouvertes.fr/hal-01140342/file/Makhlouf_Dupont_Tellier_V3.pdf}
+    
+    DUPONT, Yoann and TELLIER, Isabelle. \textbf{Un reconnaisseur d'entités nommées du Français}. TALN. 2014. p. 40-41.\\
+    \url{http://www.aclweb.org/anthology/F/F14/F14-3.pdf#page=42}
+    
+    TELLIER, Isabelle, DUPONT, Yoann, ESHKOL-TARAVELLA, Iris and WANG, Ilaine. \textbf{Peut-on bien chunker avec de mauvaises étiquettes POS ?} In : TALN. 2014. p. 125-136.\\
+    \url{https://hal.archives-ouvertes.fr/file/index/docid/1024274/filename/taln2014.pdf}
+    
+    TELLIER, Isabelle, DUPONT, Yoann, ESHKOL-TARAVELLA, Iris and WANG, Ilaine. \textbf{Adapt a Text-Oriented Chunker for Oral Data: How Much Manual Effort Is Necessary?} In : IDEAL. 2013. p. 226-233.\\
+    \url{https://hal.archives-ouvertes.fr/hal-01174605/document}
+    
+    TELLIER, Isabelle and DUPONT, Yoann. \textbf{How Symbolic Learning Can Help Statistical Learning (and vice versa)}. In : RANLP 2013. p. 649-658.\\
+    \url{http://www.lattice.cnrs.fr/sites/itellier/articles/Tellier_Dupont_RANLP.pdf}
+    
+    TELLIER, Isabelle and DUPONT, Yoann. \textbf{Apprentissage symbolique et statistique pour le chunking : comparaison et combinaisons}. In : TALN-RECITAL 2013.\\
+    \url{http://www.aclweb.org/anthology/F/F13/F13-1002.pdf}
+    
+    TELLIER, Isabelle, DUPONT, Yoann and COURMET, Arnaud. \textbf{Un segmenteur-étiqueteur et un chunker pour le français}. In : JEP-TALN-RECITAL 2012.\\
+    \url{http://www.aclweb.org/anthology/F/F13/F13-1002.pdf}
+    
+    CONSTANT, Matthieu, TELLIER, Isabelle, DUCHIER, Denys, et al. \textbf{Intégrer des connaissances linguistiques dans un CRF: application à l'apprentissage d'un segmenteur-étiqueteur du français}. In : TALN 2011. p. 321.\\
+    \url{https://hal-upec-upem.archives-ouvertes.fr/file/index/docid/620923/filename/Constant_Tellier_alii.pdf}
+
+\chapter*{Annexes}
+\subfile{inputs/annexes/introduction}
+
+\section*{SEM}
+\subfile{inputs/annexes/SEM}
+
+\section*{Extraction de relations}
+%\subfile{inputs/annexes/relation-extraction}
+        \section*{Adapter et intégrer des dépendances syntaxiques}
+        \subfile{inputs/NE-relations/imm-dependencies}
+
+\chapter*{Glossaire}
+\subfile{inputs/chapter/glossary}
+
+\bibliographystyle{apa}
+\bibliography{bibliography}
+
+%
+% back cover
+%
+
+\cleardoublepage
+\clearpage\value{page}\null\pagestyle{empty}\newpage
+
+\pagestyle{empty}
+\linespread{1.0}
+
+\begin{center}\textbf{la structuration dans les entités nommées}\end{center}
+\small{ \subfile{inputs/abstract-fr} }
+
+\vspace{0.2em}
+
+\begin{center}\textbf{structuration in Named Entities}\end{center}
+\small{ \subfile{inputs/abstract-en} }
+
+\vspace{0.25em}
+
+\begin{flushleft}
+\textbf{École doctorale N$^{\circ}$268, Langage et Langues}\\
+Université Sorbonne Nouvelle \\
+MAISON DE LA RECHERCHE \\
+Bureau A006 \\
+4, rue des irlandais \\
+75005 PARIS
+\end{flushleft}
+\end{document}

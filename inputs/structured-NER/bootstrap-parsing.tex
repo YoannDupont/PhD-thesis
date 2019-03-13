@@ -1,0 +1,48 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+L'idée de la cascade \textit{bootstrapped}, que nous utiliserons cette fois avec les réseaux de neurones, est similaire à celle de la cascade \textit{kickstarted}, mais se veut bien plus simple. La différence principale vient du fait que nous ne considérons plus qu'une seule passe, celle récursive. Lorsqu'aucun contexte n'est disponible, nous mettons une annotation spécifique pour signaler qu'aucune annotation n'a été précédemment faite. Cela permet de beaucoup simplifier le processus d'annotation, car nous passons de quatre systèmes à un seul.
+Pour cette méthode de cascade, nous avons utilisé des réseaux de neurones à la place des CRF, pour plusieurs raisons. La première est la complexité due à l'espace de sortie. Pour un CRF, l'augmentation de la complexité (autant en mémoire qu'en temps) par rapport au nombre d'éléments de l'espace de sortie est au mieux linéaire, au pire quadratique; alors que pour un réseau de neurones l'augmentation du nombre d'éléments en sortie a une influence bien moindre en comparaison. Une autre raison, plus intéressante encore, est la représentation du contexte. En effet, une même classe peut s'observer dans différents contextes et à différents niveaux de l'arborescence. Ainsi, le réseau de neurones sera capable d'apprendre une représentation fine des étiquettes en tant qu'information contextuelle. Il pourra, par exemple, distinguer «\ Yoann\ » dans une première passe d'annotation où une annotation \emph{prénom} doit être retrouvée de «\ Yoann\ » lorsqu'il a été identifié en tant que \emph{prénom}, où une annotation \emph{personne} doit être retrouvée. Si l'on se réfère à l'algorithme \ref{alg:AnnotationCascade}, mdls\_amorce ne contient aucun éléments et mdls\_recurrence contient un unique élément. Le fonctionnement de l'algorithme est illustré par l'automate de la figure \ref{fig:bootstrap-automaton} tandis qu'un exemple déroulé de l'annotation \textit{bootstrapped} est donné dans la figure \ref{tab:bootstrap-annotations}.
+
+\begin{figure}[ht!]
+\centering
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=6cm,
+                semithick, scale = 1.0, transform shape]
+
+\node[initial,state]   (A) [align=center]             {LSTM};
+\node[accepting,state] (B) [align=center, right of=A] {STOP};
+
+  \path (A) edge [loop above] node [above] {nouvelles entit\'{e}s} (A)
+        (A) edge [bend left,left] node [above] {pas de nouvelles entit\'{e}s} (B)
+        ;
+\end{tikzpicture}
+\caption{Une représentation en automate de la cascade \textit{bootstrapped} pour Quaero}
+\label{fig:bootstrap-automaton}
+\end{figure}
+
+\begin{table}[ht!]
+    \centering
+    \begin{tabular}{|l|cccccc|}
+    \hline
+    LSTM (niveau 5)     & \multicolumn{6}{c|}{\textcolor{red}{func.ind (STOP)}} \\
+    \cline{2-7}
+    LSTM (niveau 4)     & \multicolumn{6}{c|}{\textcolor{red}{func.ind}} \\
+    \cline{2-7}
+    LSTM (niveau 3)     & O & \multicolumn{1}{|c|}{\textcolor{blue}{kind}} & O & \multicolumn{3}{|c|}{\textcolor{red}{pers.ind}} \\
+    \cline{3-3}\cline{5-7}
+    LSTM (niveau 2)     & O & O & O & \multicolumn{3}{|c|}{\textcolor{red}{pers.ind}} \\
+    \cline{5-7}
+    LSTM (niveau 1)     & O & O & O & \multicolumn{1}{|c|}{\textcolor{blue}{qualifier}} & \multicolumn{1}{c|}{\textcolor{blue}{name.first}} & \multicolumn{1}{c|}{\textcolor{blue}{name.last}} \\
+    \cline{5-7}
+    contexte (niveau 0) & O & O & O & O & O & O \\
+    \hline
+    tokens                & notre & président & , & M. & Nicolas & Sarkozy \\
+    \hline
+    \end{tabular}
+    \caption{les différentes passes d'annotation selon une cascade \textit{bootstrap}.}
+    \label{tab:bootstrap-annotations}
+\end{table}
+
+Le tableau \ref{tab:bootstrap-annotations} montre également l'intérêt de l'approche \textit{bootstrapped} par rapport à l'approche \textit{kickstarted}. Là où la cascade \textit{kickstarted} prend 6 passes pour atteindre un critère d'arrêt, la cascade \textit{bootstrapped} n'en prend que 5. Elle a donc l'avantage d'être plus efficace en temps. Dans la section suivante, nous évaluerons les résultats obtenus par les différents types de cascades.
+
+\end{document}

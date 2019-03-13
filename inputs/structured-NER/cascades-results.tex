@@ -1,0 +1,248 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Le tableaux\ \ref{tab:kickstart-results} et \ref{tab:bootstrap-results} présentent les différents résultats obtenus avec le modèle \emph{kickstarted} ainsi qu'avec le modèle \emph{bootstrapped} en fonction du jeu de traits utilisés.
+
+Les traits reposant sur les taxonomies utilisent une quarantaine de dictionnaires constitués soit manuellement soit en extrayant des connaissances de ressources externes, comme par exemple Yago. La taxonomie complète utilisée pour les expériences est donnée dans la figure\ \ref{fig:ner-taxonomy}.
+
+\begin{figure}[ht!]
+\centering
+\small
+\begin{minipage}{0.33\linewidth}
+\begin{forest}
+  for tree={
+    grow'=0,
+    child anchor=west,
+    parent anchor=south,
+    anchor=west,
+    calign=first,
+    inner xsep=7pt,
+    edge path={
+      \noexpand\path [draw, \forestoption{edge}]
+      (!u.south west) +(7.5pt,0) |- (.child anchor) pic {folder} \forestoption{edge label};
+    },
+    before typesetting nodes={
+      if n=1
+        {insert before={[,phantom]}}
+        {}
+    },
+    fit=band,
+    before computing xy={l=15pt},
+  }  
+[NER
+    [location
+        [admin div (1 to 4)]
+        [building]
+        [city]
+        [country]
+        [continent]
+        [thoroughfare]
+        [electronic]
+    ]
+    [number
+        [units]
+        [tens]
+        [hundreds]
+        [thousands]
+        [others]
+    ]
+]
+\end{forest}
+\end{minipage}
+\begin{minipage}{0.3\linewidth}
+\begin{forest}
+  for tree={
+    grow'=0,
+    child anchor=west,
+    parent anchor=south,
+    anchor=west,
+    calign=first,
+    inner xsep=7pt,
+    edge path={
+      \noexpand\path [draw, \forestoption{edge}]
+      (!u.south west) +(7.5pt,0) |- (.child anchor) pic {folder} \forestoption{edge label};
+    },
+    before typesetting nodes={
+      if n=1
+        {insert before={[,phantom]}}
+        {}
+    },
+    fit=band,
+    before computing xy={l=15pt},
+  }  
+[
+    [person
+        [famous]
+        [job]
+        [military]
+        [title]
+        [name
+            [first]
+            [last]
+            [arab]
+        ]
+        [demonym
+            [fullname]
+            [prefix]
+        ]
+        [doctrin
+            [singular]
+            [plural]
+        ]
+    ]
+]
+\end{forest}
+\end{minipage}
+\begin{minipage}{0.33\linewidth}
+\begin{forest}
+  for tree={
+    grow'=0,
+    child anchor=west,
+    parent anchor=south,
+    anchor=west,
+    calign=first,
+    inner xsep=7pt,
+    edge path={
+      \noexpand\path [draw, \forestoption{edge}]
+      (!u.south west) +(7.5pt,0) |- (.child anchor) pic {folder} \forestoption{edge label};
+    },
+    before typesetting nodes={
+      if n=1
+        {insert before={[,phantom]}}
+        {}
+    },
+    fit=band,
+    before computing xy={l=15pt},
+  }  
+[
+    [organisation
+        [company]
+        [media]
+        [organisation]
+        [sport]
+    ]
+    [time
+        [indicator]
+        [month]
+        [week day]
+    ]
+    [other
+        [cardinal point]
+        [discourse marker]
+        [religion book]
+        [political]
+        [law/rule trigger]
+    ]
+]
+\end{forest}
+\end{minipage}
+\caption{taxonomie utilisée pour les tâches de REN}
+\label{fig:ner-taxonomy}
+\end{figure}
+
+
+
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|c|c|}
+\cline{2-2}
+\multicolumn{1}{c|}{} & SER \\
+\hline
+taxonomie             & \underline{34.3}        \\
+\hline
+préfixes + suffixes   & 35.5        \\
++ syntaxe             & 37.0        \\
++ verbes              & 37.4        \\
+jeu complet           & 43.3        \\
+\hline
+deux niveaux          & 37.0        \\
+top-down              & 37.1        \\
+\hline
+\hline
+\citet{dinarelli2012} & \textbf{\underline{33.3}} \\
+\hline
+\end{tabular}
+\caption{résultats des cascades "kickstarted" sur le corpus Quaero, comparée au vainqueur de Quaero}
+\label{tab:kickstart-results}
+\end{table}
+
+Les résultats obtenus par la cascade \textit{bootstrap} sont donnés dans le tableau \ref{tab:bootstrap-results}. Ces derniers sont meilleurs que ceux du vainqueur de la campagne Quaero. Bien que nous n'ayons pas amélioré les meilleurs résultats obtenus par \citet{dinarelli2012}, les résultats comparés à \textit{tree-baseline}, qui ont une quantité d'information équivalente, montent un gain significatif. Ces résultats ont par ailleurs été obtenus sans recourir à des représentations préapprises sur un large volume de données, montrant le fort potentiel du modèle. Nous avons distingué deux niveaux d'annotation de quatre afin de voir l'évolution des chiffres de qualité, aucun système à notre connaissance n'ayant utilisé des réseaux de neurones pour répondre à cette tâche ou une qui lui serait similaire. Nous n'avions à la base aucune intuition sur le comportement d'un tel système. Il est à noter que nous nous sommes arrêtés à quatre niveaux d'annotation, contre 6 pour le CRF. Cela vient du fait qu'à partir du troisième et quatrième niveaux, des annotations inconsistantes commençaient à être relevées. Ces annotations étaient directement voisines à un même niveau et en chevauchaient une de plus bas niveau. Étendre leurs frontières donnair alors deux annotations de même niveau à se chevaucher, ce qui est incohérent. Un exemple de ce type d'annotation est donné dans le tableau \ref{tab:incoherent-annotation}. Nous avons supprimé ces annotation de manière algorithmique afin de conserver des annotations cohérentes. Effectuer plus d'annotations de plus haut niveau augmentait le nombre d'annotations inconsistantes.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|c|c|}
+\cline{2-2}
+\multicolumn{1}{c|}{} & SER \\
+\hline
+2 niveaux   & 32.39       \\
+4 niveaux   & \underline{31.85}       \\
+\hline
+\citet{dinarelli2012} \textit{tree-baseline} & \underline{33.4} \\
+\citet{dinarelli2012} parent-context (vainqueur de Quaero) & \underline{33.3} \\
+\citet{dinarelli2012} parent-node-filler (après Quaero) & \textbf{\underline{30.2}} \\
+\hline
+\end{tabular}
+\caption{résultats des cascades "bootstrapped" sur le corpus Quaero, comparés au vainqueur de Quaero.}
+\label{tab:bootstrap-results}
+\end{table}
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\cline{2-5}
+\multicolumn{1}{c}{} & \multicolumn{4}{|c|}{niveaux} \\
+\hline
+token & 1 & 2 & 3 & 4 \\
+\hline
+Bordeaux & B-name & B-loc.adm.town & B-org.ent & B-org.ent \\
+six & \textcolor{red}{B-val} & B-amount & O & \textcolor{orange}{B-val} \\
+et & \textcolor{red}{I-val} & I-amount & O & \textcolor{orange}{I-val} \\
+sept & \textcolor{red}{I-val} & I-amount & O & \textcolor{red}{B-day} \\
+avril & B-month & I-amount & O & B-month \\
+\hline
+\end{tabular}
+\caption{Un exemple d'annotation incohérente donné par la cascade de Bi-LSTM-CRF. Les annotation incohérentes sont marquées en rouge.}
+\label{tab:incoherent-annotation}
+\end{table}
+
+La figure \ref{fig:cascades-error-comparison} illustre les différences entre les systèmes montrés ici selon les différents chiffres relatifs au SER. Nous notons deux tendances principales. La première est la forte réduction des suppressions (D sur la figure), cette valeur diminuant au fur et à mesure que le nombre de niveaux annotés augmente. Cela montre à la fois le côté plus couvrant du réseau de neurones, le nombre de suppressions diminuant et le nombre de corrects augmentant. Le réseau de neurones semble également faire des erreurs moins graves que le CRF, faisant plus d'erreurs de type ou frontière. L'autre tendance intéressante là où l'annotation à deux niveaux du \textit{bootstrap} contient beaucoup moins d'insertions (bruit), ces nombres deviennent comparables lorsque quatre niveaux sont annotés. Comme nous l'avons noté précédemment, le RNN fournit des annotations inconsistantes à partir du troisième niveau. Cette augmentation des erreurs d'insertions semble refléter la baisse de qualité des représentations apprises sur les niveaux supérieurs.
+
+\begin{figure}[ht!]
+\centering
+\scalebox{0.75}{
+    \begin{pspicture}(-4,-4)(4,4)
+    \psset{unit=1.2}
+    \psKiviat[rotate=0.5,
+              yLabels={$S_{t}$,OK,I,D,$S_{t+b}$,$S_{b}$,%
+               },
+      labelsep=10pt]{6}{3}
+    \psKiviatTicklines[Dx=0.5,linecolor=black!30]{6}{3}
+    \psKiviatAxes[linecolor=black!30]{6}{3}
+    \psKiviatLine[linewidth=2pt,linecolor=red!60]{2.5, 2.5, 2.5, 2.5, 2.5, 2.5} % CRF
+    \psKiviatLine[linewidth=2pt,linecolor=green!60]{2.62, 2.58, 1.82, 2.24, 2.64, 2.42} % NN 2 levels
+    % 100% = 2.5
+    % OK = 106.52 = 2.58
+    % S_t = 108.15 = 2.62
+    % S_b = 104.8 = 2.42
+    % S_t+b = 100.62 = 2.64
+    % D = 78.52 = 2.24
+    % I = 106.14 = 1.82
+    \psKiviatLine[linewidth=2pt,linecolor=blue!60]{2.7, 2.663, 2.6535, 1.96, 2.52, 2.62} % NN 4 levels
+    % 100% = 2.5
+    % OK = 106.52 = 2.663
+    % S_t = 108.15 = 2.70
+    % S_b = 104.8 = 2.62
+    % S_t+b = 100.62 = 2.52
+    % D = 78.52 = 1.96
+    % I = 106.14 = 2.6535
+    \multido{\rA=0.5+0.5,\iA=20+20}{6}{\uput[3](0,\rA){\iA}}
+    \end{pspicture}
+}
+\caption{Comparaison de la correction et des erreurs commises par les systèmes par cascade d'annotateurs linéaire. S$_{t}$ sont les erreurs de type,  S$_{b}$ les erreurs de frontière et  S$_{t+b}$  sont les erreeus de type et de frontière. En rouge, le système \textit{CRF kickstart} fait référence (toutes ses valeurs sont à 100\%). En vert, le système \textit{NN bootstrap} sur deux niveaux. En bleu, le même système, sur quatre niveaux.}
+\label{fig:cascades-error-comparison}
+\end{figure}
+
+Dans la section suivante, nous nous concentrerons sur les erreurs commises par la cascade de CRF sur le Quaero v2, aucun travail n'ayant été publié sur ce dernier à notre connaissance.
+
+\end{document}

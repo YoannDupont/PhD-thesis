@@ -1,0 +1,39 @@
+\documentclass[citation\_needed]{subfiles}
+\begin{document}
+
+Pour cette comparaison, nous avons utilisé le Bi-LSTM-CRF proposé par \citet{lample2016neural}\footnote{disponible à l'adresse : \url{https://github.com/glample/tagger}}, décrit plus en détail dans la section \ref{subsec:NNs}. Afin d'obtenir une comparaison complète, nous l'avons tout d'abord entraîné sans préentrainement des représentations puis en utilisant des plongements préappris sur des corpus issus du web\footnote{disponibles à l'adresse : \url{http://fauconnier.github.io}}. Ils ont été appris à l'aide de word2vec \citep{mikolov2014word2vec} sur le corpus FrWac du projet WaCky \citep{baroni2009wacky} et sur un dump de Wikipedia français. Ces derniers donnant des résultats significativement moins bons que ceux appris sur FrWac, nous ne les détaillerons pas ici. Les plongements appris sur le corpus FrWac ont une taille de 200, les tokens apparaissant moins de 100 fois ont été considérés comme inconnus.
+
+Pour notre Bi-LSTM-CRF, nous avons utilisé des vecteurs de taille 200 pour les tokens et de taille 25 pour les caractères. Nous avons utilisé un dropout de 0,5. Les modèles ont été entraînés pendant 50 itérations selon une descente de gradient stochastique, le modèle final étant celui ayant maximisé la F-mesure sur les entités dans le corpus de développement. Nous avons également évalué le gain obtenu en utilisant les traits de \citet{raymond2010reconnaissance} en tant qu'information supplémentaire de notre réseau, en leur attribuant une taille de 32, taille donnant les meilleurs résultats dans nos expériences. Les résultats comparatifs entre les CRF et les LSTM sont donnés dans le tableau \ref{tab:CRF-vs-LSTM-vs-SEM}.
+
+\begin{table}[ht!]
+\centering
+\small
+\begin{tabular}{|l|ccc|ccc|ccc|}
+\hline
+\multirow{2}{*}{Système}   & \multicolumn{3}{c|}{Connues} & \multicolumn{3}{c|}{Inconnues} & \multicolumn{3}{c|}{Global}\\
+                           & P     & R     & F          & P     & R     & F             & P     & R     & F   \\
+\hline
+CRF (\emph{baseline})      & 95.04 & 92.34 & 93.67 & 68.68 & 53.53 & 60.17 & 85.89 & 76.88 & 81.13 \\
+CRF                        & \textbf{97.21} & 93.90 & 95.53 & 72.63 & 59.20 & 65.17 & \textbf{88.41} & 80.03 & 84.05 \\
++ heuristique1             & 96.83 & \textbf{95.46} & \textbf{96.14} & 72.46 & 62.53 & 67.13 & 87.89 & 82.34 & 85.02 \\
+\hline
+LSTM (\emph{baseline}) & 96.10 & 94.33 & 95.20 & 64.21 & 54.18 & 58.77 & 84.53 & 78.33 & 81.31 \\
++ l/POS                    & 95.95 & 94.04 & 94.99 & 70.13 & 59.13 & 64.27 & 86.56 & 80.20 & 83.26 \\
+LSTM (FrWac)           & 96.25 & 94.61 & 95.42 & 69.44 & 60.81 & 64.84 & 86.30 & 81.14 & 83.64 \\
++ l/POS                    & 96.11 & 94.61 & 95.35 & \textbf{74.50} & 64.45 & 69.12 & 88.16 & 82.59 & 85.29 \\
++ heuristique1             & 95.98 & 94.89 & 95.44 & 73.09 & \textbf{67.45} & \textbf{70.16} & 87.23 & \textbf{83.96} & \textbf{85.57} \\
+\hline
+SEM & ? & ? & ? & ? & ? & ? & 86.38 & 80.30 & 83.23 \\
+\hline
+\end{tabular}
+\caption{comparaison entre les différents CRF et LSTM-CRF. l/X indique l'utilisation d'un ensemble de lexiques où les tokens non reconnus sont remplacés par l'information X.}
+\label{tab:CRF-vs-LSTM-vs-SEM}
+\end{table}
+
+La qualité de notre CRF de base est inférieure par rapport à SEM \citep{dupont2014reconnaisseur} car nous n'avons pas pu réutiliser tous les dictionnaires qu'il utilisait tels quels. Par exemple, les dictionnaires de lieux étaient particulièrement extensifs mais n'avaient pas été classés hiérarchiquement, refaire cette hiérarchie aurait été trop compliqué et coûteux plutôt que d'en reconstituer une nouvelle, même si moins couvrante. L'utilisation des traits détaillés ici nous a permis d'obtenir une qualité finale supérieure, ce qui montre bien leur pertinence. Nos Bi-LSTM-CRF intégrant des informations extérieures, autant sous la forme des traits détaillés dans la section \ref{sec:taxonomy-ftb} que de plongements préappris, témoignent également de l'efficacité des réseaux de neurones récurrents.
+
+Les deux systèmes ont des f-mesures globales comparables, avec cependant un avantage statistiquement significatif pour le Bi-LSTM-CRF, qui se distingue surtout sur les entités inconnues où il obtient une qualité significativement supérieure à celle du CRF, résultats cohérents avec ceux décrits par \citet{augenstein2017generalisation}. L'ajout du répertoire de lexiques décrit dans la section \ref{subsec:ontology-integration} a permis au réseau de neurones d'obtenir une représentation plus générale, en témoigne le gain de 5 à 6 points de f-mesure sur les entités inconnues, et de moins de 0,5 points sur les entités connues. L'ajout de règles de post-traitement simples a permis l'amélioration des deux meilleurs modèles respectifs, le CRF ayant plus bénéficié de ce gain que le LSTM-CRF. Cette différence s'explique par le côté plus précis du CRF, qui aura plus tendance à n'annoter une entité que dans un contexte sûr, une même entité n'étant alors annotée qu'à certains endroits. Une autre source de gain du Bi-LSTM-CRF vient des plongements préentraînés sur le corpus FrWac. Il est possible d'ajouter des représentations des tokens dans un CRF, typiquement via l'entrainement de clusters de Brown \citep{brown1992class}. Nous avons intégré 1000 clusters de Brown appris sur un dump de Wikipédia français, mais ces derniers n'ont pas amélioré nos résultats. Nous n'avons pas pu les entraîner sur le corpus FrWac, le coût en temps étant prohibitif.
+
+L'ajout de traits non-locaux en tant que post-traitement simple n'améliore pas significativement les résultats obtenus par les Bi-LSTM-CRF, en raison d'une forte baisse de la précision (-0.93). Cela vient du fait que le réseau de neurones est un système ayant tendance à être plus bruyant qu'un CRF, qui lui aura plus tendance à être silencieux. Cela se remarque également dans l'amélioration du rappel, moins importante pour le Bi-LSTM-CRF (+1.37) que pour le CRF (+2.31), autant sur les entités connues qu'inconnues. Cela suggère que le CRF a besoin d'un contexte plus fort pour annoter une entité et que Bi-LSTM-CRF a tendance à être plus consistant dans ses annotations.
+
+\end{document}

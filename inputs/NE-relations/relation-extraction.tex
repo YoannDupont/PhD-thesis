@@ -1,0 +1,54 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+L'extraction de relations est la tâche consistant à retrouver automatiquement dans un document les relations sémantiques qui lient des entités entre elles. Il s'agit d'une tâche très générique dont l'étendue est définie étant donné un modèle applicatif et un corpus, a l'instar des entités nommées qui constituent la base de cette tâche. Il n'y a donc pas de relations typiques existant entre les entités nommées, ces relations sont définies de manière spécifique selon un but ultérieur. Une représentation typique des relations entre entités est le triplet RDF \citep{lassila1998resource} qui se définissent comme "sujet-prédicat-objet", le sujet et l'objet sont deux entités et le prédicat est la relation sémantique les liant.
+Il existe deux tâches typiques entrant dans le domaine de l'extraction de relations :
+
+\begin{itemize}
+\item l'extraction de "zéro". Il s'agit ici d'extraire un ensemble précis de relations dont les sujets et les objets sont de types connus \citep{krallinger2008overview,wei2016assessing}.
+\item le \textit{slot filling}, qui nous intéresse ici. Il s'agit ici de fournir l'objet d'une relation étant donné un sujet et un prédicat. Cette tâche peut se formuler comme un système de question-réponse où le but est de répondre à des questions de type «\ où est né X ?\ » \citep{surdeanu2013overview,surdeanu2014overview}.
+\end{itemize}
+
+L'extraction de relations entre entités offre différents problèmes intéressants. Un premier est la multiplicité des réponses. En effet, il n'est pas rare que plusieurs objets soient possibles pour un même couple "sujet-prédicat", comme Bill Gates et Paul Balmer qui sont tous deux fondateurs de Microsoft. Un autre est la polysémie des entités. Par exemple, «\ Bill Gates\ », qui n'a pas l'air particulièrement polysémique (tout le monde pense au fondateur de Microsoft), peut référer à 8 autres personnes\footnote{voir : \url{https://en.wikipedia.org/wiki/Bill_Gates_(disambiguation)}}. Si l'on cherche alors à savoir où est né «\ Bill Gates\ » à partir de données textuelles non annotées, nous devons nous assurer que les Bill Gates que nous retrouvons dans le texte sont bien ceux pour lequel la question est posée.  Un troisième, lié au précédent, est la multiplicité des dénominations différentes pour la même entité. En effet le vrai nom de «\ Bill Gates\ » de Microsoft est «\ William Henry Gates III\ ». Ainsi, lorsqu'une mention d'une entité est trouvée dans le texte, il est impératif d'établir le lien avec l'entité qu'elle dénote. L'établissement de ce lien, appelé l'\textit{entity linking}, n'est pas l'objet de cette thèse et ne sera donc pas détaillé outre mesure. Des exemples de ces deux relations sont données dans la figure \ref{fig:relation-extraction-example}.
+
+\begin{figure}[ht!]
+\centering
+    \begin{dependency}[theme=default]
+        \tikzstyle{per}=[
+            draw=blue!60!black, shade, text=black,
+            top color=blue!60, rounded corners
+        ]
+        \tikzstyle{org}=[
+            draw=red!60!black, shade, text=black,
+            top color=red!60, rounded corners
+        ]
+        \begin{deptext}[column sep=1.0em]
+             |[org]| Microsoft Corporation \& $[...]$ \& , \& fondée \& par \& |[per]| Bill Gates \& et \& |[per]| Paul Allen \& . \\
+        \end{deptext}
+        \depedge{1}{6}{founded\_by}
+        \depedge{1}{8}{founded\_by}
+    \end{dependency}
+    
+    \begin{dependency}[theme=default]
+        \tikzstyle{per}=[
+            draw=blue!60!black, shade, text=black,
+            top color=blue!60, rounded corners
+        ]
+        \tikzstyle{org}=[
+            draw=red!60!black, shade, text=black,
+            top color=red!60, rounded corners
+        ]
+        \tikzstyle{loc}=[
+            draw=green!60!black, shade, text=black,
+            top color=green!60, rounded corners
+        ]
+        \begin{deptext}[column sep=0.75em]  
+             |[per]| William « Bill » Henry Gates III \& , \& né \& le \& 28 octobre 1955 \& à \& |[loc]| Seattle \& , \& $[...]$ \\
+        \end{deptext}
+        \depedge{1}{7}{city\_of\_birth}
+    \end{dependency}
+\caption{Deux exemples de relations. Le premier exemple répond à la question de profondeur 0 «\ qui est le fondateur de Microsoft ?\ ». Le second répond à la question «\ où est né le Bill Gates ?\ ».}
+\label{fig:relation-extraction-example}
+\end{figure}
+
+\end{document}

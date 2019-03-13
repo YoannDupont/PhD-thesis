@@ -1,0 +1,89 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+L'idée du CRF \textit{kickstarted} est de considérer que nous avons deux phases d'annotations principales :
+
+\begin{enumerate}
+    \item la phase \emph{d'amorce}, non récursive, où l'on considère que nous n'avons aucun contexte. Le CRF est donc appliqué tel quel et fournira du contexte à la deuxième passe.
+    \item la phase \emph{amorcée}, récursive, où Le CRF utilise les annotations trouvées aux étapes précédentes.
+\end{enumerate}
+
+Si l'on considère la hiérarchie du corpus Quaero, cela donne donc deux CRF par étapes : un pour les composants et un pour les entités. L'enchainement des CRF est illustré dans la figure\ \ref{fig:kickstart-automaton}, tandis qu'un exemple déroulé de l'annotation via la cascade \textit{kickstarted} est donné dans le tableau \ref{tab:kickstart-annotations}. Les deux premiers CRF (1 et 2) ne sont appelés qu'une unique fois afin de donner un contexte aux deux derniers (3 et 4), qui seront alors appelés récursivement l'un après l'autre, jusqu'à ce que plus aucune nouvelle annotation ne soit trouvée, donnant alors la condition d'arrêt.
+
+\begin{figure}[ht!]
+\centering
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=5cm,
+                semithick, scale = 0.65, transform shape]
+
+\node[initial,state]   (A) [align=center]             {CRF1\\(composants)};
+\node[state]           (B) [align=center, right of=A] {CRF2\\(entit\'{e}s)};
+\node[state]           (C) [align=center, below of=A] {CRF3\\(composants)};
+\node[state]           (D) [align=center, right of=C] {CRF4\\(entit\'{e}s)};
+\node[accepting,state] (E) [align=center, right of=D] {STOP};
+
+  \path (A) edge [left] node { } (B)
+        (B) edge [left] node { } (C)
+        (C) edge [left] node { } (D)
+        (D) edge [left] node [above] {nouvelles entit\'{e}s} (E)
+        (D) edge [bend left,left] node [below] {pas de nouvelles entit\'{e}s} (C)
+        ;
+\end{tikzpicture}
+\caption{une représentation en automate de la cascade de CRF sur Quaero}
+\label{fig:kickstart-automaton}
+\end{figure}
+
+\begin{table}[ht!]
+    \centering
+    \begin{tabular}{|l|cccccc|}
+    \hline
+    \cline{2-7}
+    CRF4 (niveau 6)     & \multicolumn{6}{c|}{\textcolor{red}{func.ind (STOP)}} \\
+    \cline{2-7}
+    CRF3 (niveau 5)     & O & \multicolumn{1}{|c|}{\textcolor{blue}{kind}} & O & \multicolumn{3}{|c|}{\textcolor{red}{pers.ind}} \\
+    \cline{2-7}
+    CRF4 (niveau 4)     & \multicolumn{6}{c|}{\textcolor{red}{func.ind}} \\
+    \cline{2-7}
+    CRF3 (niveau 3)     & O & \multicolumn{1}{|c|}{\textcolor{blue}{kind}} & O & \multicolumn{3}{|c|}{\textcolor{red}{pers.ind}} \\
+    \cline{3-3}\cline{5-7}
+    CRF2 (niveau 2)     & O & O & O & \multicolumn{3}{|c|}{\textcolor{red}{pers.ind}} \\
+    \cline{5-7}
+    CRF1 (niveau 1)     & O & O & O & \multicolumn{1}{|c|}{\textcolor{blue}{qualifier}} & \multicolumn{1}{c|}{\textcolor{blue}{name.first}} & \multicolumn{1}{c|}{\textcolor{blue}{name.last}} \\
+    \cline{5-7}
+    contexte (niveau 0) & O & O & O & O & O & O \\
+    \hline
+    tokens                & notre & président & , & M. & Nicolas & Sarkozy \\
+    \hline
+    \end{tabular}
+    \caption{les différentes passes d'annotation selon une cascade \textit{kickstarted}.}
+    \label{tab:kickstart-annotations}
+\end{table}
+
+Pour pouvoir apprendre ce type de cascade de CRF, le corpus doit être généré de façon adaptée. Les tour de paroles ayant uniquement des entités de profondeurs de taille au plus 4, elles sont simplement écrites dans les corpus correspondants aux quatre CRF respectivement. Si une tour de parole comporte une entité de profondeur supérieure à 4, il sera dupliqué pour les CRF 3 et 4, avec les différentes annotations jusqu'à la racine. L'algorithme \ref{alg:CorpusTreeToCascade} détaille le processus de génération des tour de paroles. Dans cet algorithme, la méthode "AjoutSansChevauchements" supprime les annotations déjà présentes si ces dernières se chevauchent avec une annotation en cours d'ajout. Les deux niveaux les plus bas dans l'arbre vont donc être attribuées aux deux sous-parties de l'étape 1 (soit au CRF1 pour les composants, et au CRF2 pour les entités). Pour toute tour de parole comprenant une entité imbriquée dans une autre, la tour de parole va alors être dupliquée en autant de niveaux d'annotations que la profondeur de l'arbre. Ainsi, nous pouvons donner au CRF le contexte nécessaire afin qu'il puisse apprendre à reconnaître les niveaux supérieurs. Autrement dit, dans l'algorithme \ref{alg:AnnotationCascade}, mdls\_amorce et mdls\_recurrence contiennent chacun deux éléments : un pour les composants et un pour les entités.
+
+\begin{algorithm}[ht!]
+\caption{Algorithme pour transoformer un corpus arboré en cascade d'annotations}
+\label{alg:CorpusTreeToCascade}
+\begin{algorithmic}
+    \Function{Arbre\_Vers\_Cascades}{$corpus, composants, entites$}
+    \State \Comment composants est l'ensembles des composants Quaero
+    \State \Comment entites est l'ensembles des entites Quaero
+    \For{sequence \textbf{in} corpus}
+        \State arbre $\gets$ annotations\_arbre(sequence);
+        \State currentAnnotations $\gets$ $\varnothing$;
+        \State autorises $\gets$ composants;
+        \While{arbre $\neq$ $\varnothing$}
+            \State feuilles $\gets$ feuilles(arbre) $\cap$ autorises;
+            \State currentAnnotations $\gets$ AjoutSansChevauchements(currentAnnotations, feuilles);
+            \If{autorises = composants}
+                \State autorises $\gets$ entites;
+            \Else
+                \State autorises $\gets$ composants;
+            \EndIf;
+            \State ecrire(sequence, currentAnnotations);
+            \State arbre $\gets$ arbre $\setminus$ currentAnnotations);
+        \EndWhile;
+    \EndFor;
+    \EndFunction;
+\end{algorithmic}
+\end{algorithm}
+
+\end{document}

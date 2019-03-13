@@ -1,0 +1,26 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+Dans les étapes d'apprentissage, il est nécessaire d'inférer les paramètres du vecteur $\theta$ pour qu'ils soient interprétables dans l'étape d'étiquetage. Les algorithmes utilisés dans un HMM et un CRF sont les mêmes, la différence réside dans ce qui est à calculer.
+Dans la phrase d'apprentissage d'un HMM, l'inférence est utilisée pour évaluer les distributions marginales, c'est-à-dire la probabilité p(x) quand la probabilité jointe p(x,y) est connue. Dans le cadre d'un CRF, il s'agit de la valeur de normalisation $Z_{\theta}(x)$ qui est calculée, l'affectation des poids dans $\theta$ modifiant la somme des probabilités conditionnelles, alors que ce n'est pas le cas pour la probabilité jointe. Sur un HMM représenté par facteurs, l'algorithme \emph{forward-backward} \citep{baum1972equality,rabiner1986introduction} est utilisé pour évaluer les distributions marginales.
+
+Pour prédire une sortie avec un modèle appris, on utilise généralement l'étiquetage le plus probable sur la chaîne $y_{out} = \argmax{y}\ H(y, x)$, où $H(y, x)$ est la loi de probabilité reliant y à x. Dans un HMM il s'agit de la probabilité jointe alors que dans un CRF la probabilité conditionnelle. On utilise l'algorithme de Viterbi \citep{viterbi1967error,rabiner1986introduction} afin d'évaluer la séquence d'étiquettes la plus probable.
+
+Dans le procesus d'apprentissage, les paramètres du vecteur $\theta$ sont évalués par le critère du maximum de vraisemblance. Dans le cas des chaînes linéaires, le maximum de log vraisemblance \citep{Lafferty01} est le critère utilisé :
+
+\begin{equation} \label{eq:log-likelihood}
+\begin{aligned}
+l(\theta) &= \sum_{i=1}^{N} log(p_{\theta}(y^{i}|x^{i})) \\
+          &= \sum_{i=1}^{N} \left \{ \log Z_{\theta}(x^{i}) - \sum_{k=1}^{K} \theta_{k}f_{k}(x^{i}, y^{i}) \right \}
+\end{aligned}
+\end{equation}
+
+où N est l'ensemble des phrases avec leurs attributs. La vraisemblance est incalculable de façon analytique, elle doit alors être approximée par des méthodes numériques. La méthode utilisée dans le cas présent est de calculer sa dérivée partielle, une propritété mathématique disant que la vraisemblance est maximale lorsque sa dérivée partielle est nulle. Généralement, il convient d'utiliser des régularisations afin d'éviter le surapprentissage sur les données. L'une des plus efficaces est la régularisation \emph{elastic net} \citep{zou2005regularization} qui utilise les normes $\ell^{1}$ et $\ell^{2}$, la fonction d'objectif s'écrivant alors :
+
+\begin{equation} \label{eq:penalised-log-likelihood}
+l(\theta) + \rho_{1} \left \| \theta \right \|_{1} + \frac{\rho_{2}}{2} \left \| \theta \right \|_{2}
+\end{equation}
+
+Où $\rho_{1}$ et $\rho_{2}$ sont les valeurs des paramètres de régularisation $\ell^{1}$ et $\ell^{2}$ des paramètres, respectivement. L'endroit où les dérivées partielles s'annulent est approximé, raison pour laquelle chaque assignation des poids de $\theta$ est calculée en fonction de celle qui précède à chaque itération de l'algorithme. Pour apprendre la nouvelle assignation des poids, la descente de gradient stochastique \citep{Lafferty01} est employée.
+
+\end{document}

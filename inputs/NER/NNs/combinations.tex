@@ -1,0 +1,21 @@
+\documentclass[citation\_needed]{subfiles}
+\begin{document}
+
+Le réseau présenté par \citet{lample2016neural} est une variante enrichie de l'approche définie par \citet{huang2015bidirectional}, où la sortie d'un LSTM est donnée à un CRF afin que ce dernier prédise la séquence. L'intérêt de l'ajout d'un CRF est que ce dernier, contrairement au LSTM, intègre des constraintes structurelles sur l'espace de sortie, un LSTM prédisant "indépendamment" une sortie pour chaque élément de la séquence, dont une vision d'ensemble est disponible dans la figure\ \ref{fig:lstm-CRF}. L'intérêt du réseau de \citet{lample2016neural} réside dans les ajouts qu'il fait à ce modèle : notamment une couche de sélection (dropout) ainsi qu'une représentation du token calculée au niveau des caractères. Cette représentation est faite via un LSTM bidirectionnel, cela permet de capturer des informations morphologiques en termes de préfixes et suffixes du token. La représentation finale d'un token est donc la concaténation des trois représentations suivantes : celle de sa forme de surface, celle de ses préfixes et celle de ses suffixes comme illustré sur la figure\ \ref{fig:lstm-CRF}. Cela est comparable à ajouter une analyse morphologique à chaque token.
+
+\begin{figure}[ht!]
+\begin{minipage}{0.49\linewidth}
+    \centering
+    \includegraphics[scale=0.35]{images/LSTM/LSTM-CRF}
+\end{minipage}
+\begin{minipage}{0.49\linewidth}
+    \centering
+    \includegraphics[scale=0.4]{images/LSTM/LSTM-char}
+\end{minipage}
+\caption{À gauche : le modèle LSTM-CRF pour une phrase. À droite : Le réseau LSTM pour un token. Schémas repris de \citet{lample2016neural}.}
+\label{fig:lstm-CRF}
+\end{figure}
+
+D'autres combinaisons incluent le LSTM-CNN \citep{chiu2015named} et le LSTM-CNN-CRF \citep{ma2016end}. L'efficacité de ce type de réseaux n'est plus à démontrer \citep{huang2015bidirectional,lample2016neural}, une de leur grande force étant leur capacité de généralisation \citep{augenstein2017generalisation}, leur permettant d'obtenir de très bons scores sur les entités inconnues. Dans cette partie, nous souhaitons effectuer une comparaison entre les différents CRF proposés ici et le réseau Bi-LSTM-CRF afin d'en comparer les capacités respectives de généralisation.
+
+\end{document}

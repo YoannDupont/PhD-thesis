@@ -1,0 +1,148 @@
+\documentclass[PhD-Yoann-Dupont.tex]{subfiles}
+\begin{document}
+
+À l'heure actuelle, nombre des approches les plus performantes utilisent des dictionnaires volumineux \citep{leaman2013ncbi,lowe2014leadmine,chiu2015named}, des patrons de reconnaissance \citep{campos2013chemical,holat2016fouille} ou des listes d'affixes prédéfinies \citep{leaman2013ncbi}. Ces affixes étant communs à de nombreuses entités, il est possible de les trouver de manière automatique en fouillant les sous-séquences récurrentes de ces dernières, dont il faut alors comparer les formes. Notre algorithme se base sur ce principe : il a pour but de trouver les informations pertinentes d'un dictionnaire afin de réduire le volume d'information nécessaire sans pour aurant avoir besoin de constituer manuellement un ensemble de patrons de reconnaissance. Notre approche consiste à explorer des dictionnaires à la recherche de sous-chaînes répétées. Ces sous-chaînes sont des affixes utilisés comme patrons de reconnaissance de tokens candidats. Le calcul des sous-chaînes se base sur l'algorithme du calcul de la plus longue sous-chaîne commune. Cet algorithme peut être vu comme une version simplifiée de l'algorithme plus connu du calcul de la plus longue sous-séquence commune : les sous-chaînes que nous cherchons à extraire sont contiguës. Chaque cellule dans la matrice est un naturel s'interprétant comme ``la taille de la sous-chaîne commune reconnue à l'état courant''.
+
+Pour deux entrées $L$ et $R$, nous commençons par construire une matrice $M$ de taille [$|L|$+1, $|R|$+1], où $|L|$ représente la taille de l'entrée L. Cette matrice est alors remplie de zéros, signifiant qu'aucune sous-chaîne commune n'a été trouvée. À chaque instant, nous sommes à une position dans la matrice : $M[i,j]$. Si $L[i]$ et $R[j]$ sont égaux, $M[i,j]$ est alors actualisé comme étant $M[i-1,j-1]+1$, signifiant que la sous-chaîne précédemment trouvée est rallongée d'un élément. L'algorithme se poursuit jusqu'à remplir la dernière case de $M$. Le pseudo-code est donné dans l'algorithme \ref{alg:extractAffixes}.
+
+\begin{algorithm}[ht!]
+\caption{Compute affixes for entries L and R}
+\label{alg:extractAffixes}
+\begin{algorithmic}
+    \Function{extractAffixes}{$L,R$}
+    \State M $\gets$ Matrix[0..|L|, 0..|R|] of Integer;\Comment{init with 0s}
+    \State prefixes $\gets$ Set of String;
+    \State suffixes $\gets$ Set of String;
+    \State infixes $\gets$ Set of String;
+    \For{i $\in$ $1..|L|$}
+        \For{j $\in$ $1..|R|$}
+            \If{L[i] = R[j]}\Comment{longer common affix found}
+                \State $M[i,j]\gets M[i-1,j-1] + 1;$
+                \If{i = L}\Comment{suffix}
+                    \State add(suffixes, suffix(L, M[i,j]))
+                    \If{j $\neq$ |R|}\Comment{infix}
+                        \State add(infixes, substring(R, start$\gets$j, length$\gets$M[i,j]))
+                    \EndIf;
+                \ElsIf{j = |R|}\Comment{suffix}
+                    \State add(suffixes, suffix(R, M[i,j]))
+                    \State add(infixes, substring(L, start$\gets$i, length$\gets$M[i,j]))
+                \EndIf;
+                %\If{M[i,j] = i or M[i,j] = j}\Comment{prefix}
+                %    \State add(prefixes, substring(L, 1, M[i,j]))
+                %\EndIf;
+            \ElsIf{M[i-1,j-1] $\neq$ 0}
+                \If{M[i-1,j-1] = i-1}\Comment{prefix}
+                    \State add(prefixes, prefix(L, M[i-1,j-1]))
+                    \If{i $\neq$ j}\Comment{infix}
+                        \State add(infixes, substring(R, start$\gets$j-M[i-1,j-1]-1, length$\gets$M[i-1,j-1]))
+                    \EndIf;
+                \ElsIf{M[i-1,j-1] = j-1}\Comment{prefix}
+                    \State add(prefixes, prefix(R, M[i-1,j-1]))
+                    \State add(infixes, substring(L, start$\gets$i-M[i-1,j-1]-1, length$\gets$M[i-1,j-1]))
+                \EndIf;
+                %\Else\Comment{infix}
+                %    \State add(infixes, substring(L, 1, M[i-1,j-1]))
+                %\EndIf;
+            \EndIf;
+        \EndFor;
+    \EndFor;
+    \State \Return $<$prefixes, suffixes, infixes$>$;
+    \EndFunction;
+\end{algorithmic}
+\end{algorithm}
+
+Comme nous pouvons le voir sur l'exemple de sortie donné dans la figure \ref{tab:extractAffixes}, la matrice renvoyée ne contient des séquences de nombres non-nuls que sur des morceaux en diagonal. On peut alors savoir simplement quelle est la plus longue sous-chaîne commune en prenant le dernier nombre d'une séquence non-nulle. À partir de la figure \ref{tab:extractAffixes} nous pouvons donc déduire l'ensemble des traits extraits : \{o, t, e, n, en, one\}. Il est aisé aussi de classer les différents traits en préfixes, suffixes et infixes, avec plus ou moins de contraintes. Dans l'algorithme\ \ref{alg:extractAffixes}, nous avons classifié les traits de la façon suivante : préfixe ou suffixe s'il est respectivement préfixe ou suffixe d'un des deux tokens, et infixe s'il est une sous-séquence stricte d'un des deux tokens. Dans ce cas, nous avons l'ensemble des suffixes \{e,one\} et des infixes \{o, t, e, n, en\}. Il est également envisageable d'utiliser une classification plus stricte, en renforçant la condition «\ au moins un token\ » au profit de «\ des deux tokens\ ». La première condition permet la génération d'un plus grand nombre d'affixes candidats mais potentiellement moins justes, alors que la seconde permet d'avoir des préfixes et suffixes plus sûrs mais manquant de couverture. Le tableau de droite sur la figure\ \ref{tab:extractAffixes} montre l'intérêt d'une contrainte plus lâche : ici, nous extrayons la séquence "bcl" comme étant un préfixe et un suffixe, ce qui n'aurait pas été le cas avec la contrainte plus stricte, où "bcl" se serait vu classé comme "infixe".
+
+\begin{table}[ht!]
+\begin{minipage}{0.49\linewidth}
+\centering
+\begin{tabular}{l|ccccccccc}
+  &    & m & e & n & t & h & o & n & e \\
+\hline
+  &  0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+r &  0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+o &  0 & 0 & 0 & 0 & 0 & 0 & \underline{\textit{1}} & 0 & 0 \\
+t &  0 & 0 & 0 & 0 & \underline{\textit{1}} & 0 & 0 & 0 & 0 \\
+e &  0 & 0 & \textit{1} & 0 & 0 & 0 & 0 & 0 & 0 \\
+n &  0 & 0 & 0 & \underline{\textit{2}} & 0 & 0 & 0 & \underline{\textit{1}} & 0 \\
+o &  0 & 0 & 0 & 0 & 0 & 0 & \textit{1} & 0 & 0 \\
+n &  0 & 0 & 0 & \underline{\textit{1}} & 0 & 0 & 0 & \textit{2} & 0 \\
+e &  0 & 0 & \underline{\textit{1}} & 0 & 0 & 0 & 0 & 0 & \underline{\textit{3}} \\
+\end{tabular}
+\end{minipage}
+\begin{minipage}{0.49\linewidth}
+\centering
+\begin{tabular}{l|ccccccc}
+  &    & b & c & l & - & 2 \\
+\hline
+  &  0 & 0 & 0 & 0 & 0 & 0 \\
+2 &  0 & 0 & 0 & 0 & 0 & \underline{\textit{1}} \\
+b &  0 & 1 & 0 & 0 & 0 & 0 \\
+c &  0 & 0 & 2 & 0 & 0 & 0 \\
+l &  0 & 0 & 0 & \underline{\textit{3}} & 0 & 0 \\
+\end{tabular}
+\end{minipage}
+\caption{À gauche : extractAffixes(rotenone, mentone). À droite : extractAffixes(2bcl, bcl-2)}
+\label{tab:extractAffixes}
+\end{table}
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{l|ccccc}
+             &    & organisation & des & Nations & Unies\\
+\hline
+             &  0 & 0 & 0 & 0 & 0 \\
+organisation &  0 & \underline{\textit{1}} & 0 & 0 & 0 \\
+mondiale     &  0 & 0 & 0 & 0 & 0 \\
+de           &  0 & 0 & 0 & 0 & 0 \\
+la           &  0 & 0 & 0 & 0 & 0 \\
+santé        &  0 & 0 & 0 & 0 & 0 \\
+\end{tabular}
+\caption{extractAffixes("organisation mondiale de la sante", "organisation des nations unies")}
+\label{tab:keyword-extraction}
+\end{table}
+
+Pour un dictionnaire $D$, l'algorithme \ \ref{alg:extractAffixes} est alors répété pour chaque couple d'éléments ${E_{1}, E_{2}} \in D$, donnant un ensemble d'affixes candidats, souvent de grande taille et bruité. Si l'on observe le tableau de droite dans la figure\ \ref{tab:extractAffixes}, on remarque que les nombres peuvent causer des problèmes de généralisation autant que de justesse : si on observe "A-22" et "B-32", "2" sera considéré comme suffixe, ce qui est inexact. Dans des contextes où les nombres constituent une part importante des entités (comme dans les entité biologiques et chimiques), il est possible de considérer que tout nombre ou séquence de nombres soit considérée comme étant équivalente, ce qui peut se représenter par la substitution de tout nombre ou séquence de nombres par "0". Dans les expériences que nous avons menées sur CHEMDNER, nous avons utilisé l'ensemble des entités du train en tant que dictionnaire. Afin de généraliser les entrées de notre dictionnaire, nous avons appliqué des substitutions décrites dans le tableau \ref{tab:subs}. Nous n'avons pas généralisé les majuscules pour les entités ABBREVIATION, FORMULA et IDENTIFIER où la casse fournit une information importante.
+
+\begin{table}[ht!]
+\centering
+\begin{tabular}{l|cc}
+           & majuscules $\rightarrow$ minuscules & nombres $\rightarrow$ 0 \\
+\hline
+TRIVIAL      & $\checkmark$     & $\checkmark$ \\
+SYSTEMATIC   & $\checkmark$     & $\checkmark$ \\
+ABBREVIATION & \text{\ding{55}} & $\checkmark$ \\
+FORMULA      & \text{\ding{55}} & $\checkmark$ \\
+FAMILY       & $\checkmark$     & $\checkmark$ \\
+IDENTIFIER   & \text{\ding{55}} & $\checkmark$ \\
+MULTIPLE     & $\checkmark$     & $\checkmark$ \\
+NO\_CLASS    & $\checkmark$     & $\checkmark$
+\end{tabular}
+\caption{Substitutions effectuées en fonction de l'entité}
+\label{tab:subs}
+\end{table}
+
+L'algorithme s'applique également aux séquences de tokens, ce qui revient alors à rechercher des tokens déclencheurs, ces derniers étant des N-grammes avec N non contraint. Cette méthode généralise des recherches de tokens déclencheurs souvent basées sur des unigrammes et/ou des bigrammes \citep{guodong2004exploring}. Par exemple, lancer l'algorithme sur «\ omega-3 fatty acids\ » et «\ omega-6 fatty acids\ » donnera le suffixe «\ fatty acids\ ». Cette méthode n'est pas dépendante du domaine et peut donc s'appliquer identiquement pour d'autres cas d'usage : il est tout à fait possible de chercher des tokens déclencheurs dans un cadre d'entités nommées "classique", comme illustré dans la figure\ \ref{tab:keyword-extraction} pour «\ Organisation Mondiale de la Santé\ » et «\ Organisation des Nations Unies\ ». Voici quelques exemples d'affixes et de tokens déclencheurs que nous avons pu extraire :
+
+\begin{itemize}
+    \item TRIVIAL
+        \begin{itemize}
+            \item affixes : -amic, -itol, -pine, -phen, -mycin, -ysin (bruit)
+            \item tokens : acid, aspirin, cyclic amp (amp seul non présent)
+        \end{itemize}
+    \item SYSTEMATIC
+        \begin{itemize}
+            \item affixes : trans-, acetyl-, ger- (bruit), -ol, -erol (bruit)
+            \item tokens : acid, ammonia, copper, ethanol, platinum folate
+        \end{itemize}
+    \item FAMILY
+        \begin{itemize}
+            \item tokens : acid, acids, fatty acids, vitamin, ester, bases, nucleobases
+        \end{itemize}
+\end{itemize}
+
+Dans un premier temps, nous avons vérifié manuellement les traits générés pour s'assurer que ces derniers fassent sens. Une base comme TheFreeDictionary.com qui dispose d'un dictionnaire médical\footnote{\url{http://medical-dictionary.thefreedictionary.com}} contient notamment des affixes des domaines biomédical et chimique, ce qui nous a permis d'effectuer une première vérification manuelle de la validité des traits proposés. Nous remarquons sur ces exemples que les traits peuvent être ambigus, comme «\ acid\ » qui figure à la fois dans les tokens déclencheurs de TRIVIAL, FAMILY et SYSTEMATIC.
+
+En raison du bruit engendré par cette approche, intégrer les traits tels quels semble sous-optimal, la quantité d'information apportée au modèle pouvant devenir très importante et coûteuse, d'autant que le CRF devra discriminer de nombreux traits non pertinents. Il convient alors de faire une présélection de ces traits afin de ne choisir que les plus pertinents, ce que nous détaillerons dans la section suivante.
+
+\end{document}
