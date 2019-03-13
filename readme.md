@@ -5,8 +5,8 @@ Not very clean or anything, but it might be of some help, who knows?
 
 There are two "flavours" (the first one might not be as up to date as the second one) of the PhD file:
 
-    - These_DUPONT_Yoann_2017.tex: this file will include multiple subfiles, its main purpose is to have the main file with a very readable plan;
-    - These_DUPONT_Yoann_2017-single_file.tex: the same file, but in a single source file, better for diffs with [latexdiff](https://www.ctan.org/tex-archive/support/latexdiff).
+- These_DUPONT_Yoann_2017.tex: this file will include multiple subfiles, its main purpose is to have the main file with a very readable plan;
+- These_DUPONT_Yoann_2017-single_file.tex: the same file, but in a single source file, better for diffs with [latexdiff](https://www.ctan.org/tex-archive/support/latexdiff).
 
 Single_file is a tad bit cleaner, might be better to use this one.
 
